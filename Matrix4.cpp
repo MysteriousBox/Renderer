@@ -16,57 +16,29 @@ Matrix4::Matrix4()
 
 }
 
-Matrix4 Matrix4::QuickInverse(Matrix4 & src)
-{
-	Matrix4 dest;
-	double a = src.Value[0][0],
-		b = src.Value[1][0],
-		c = src.Value[2][0],
-		d = src.Value[3][0],
-		e = src.Value[0][1],
-		f = src.Value[1][1],
-		g = src.Value[2][1],
-		h = src.Value[3][1],
-		i = src.Value[0][2],
-		j = src.Value[1][2],
-		k = src.Value[2][2],
-		l = src.Value[3][2],
-		m = src.Value[0][3],
-		n = src.Value[1][3],
-		o = src.Value[2][3],
-		p = src.Value[3][3],
-		q = a * f - b * e,
-		r = a * g - c * e,
-		s = a * h - d * e,
-		t = b * g - c * f,
-		u = b * h - d * f,
-		v = c * h - d * g,
-		w = i * n - j * m,
-		x = i * o - k * m,
-		y = i * p - l * m,
-		z = j * o - k * n,
-		A = j * p - l * n,
-		B = k * p - l * o,
-		ivd = 1 / (q * B - r * A + s * z + t * y - u * x + v * w);
-	dest.Value[0][0] = (f * B - g * A + h * z) * ivd;
-	dest.Value[1][0] = (-b * B + c * A - d * z) * ivd;
-	dest.Value[2][0] = (n * v - o * u + p * t) * ivd;
-	dest.Value[3][0] = (-j * v + k * u - l * t) * ivd;
-	dest.Value[0][1] = (-e * B + g * y - h * x) * ivd;
-	dest.Value[1][1] = (a * B - c * y + d * x) * ivd;
-	dest.Value[2][1] = (-m * v + o * s - p * r) * ivd;
-	dest.Value[3][1] = (i * v - k * s + l * r) * ivd;
-	dest.Value[0][2] = (e * A - f * y + h * w) * ivd;
-	dest.Value[1][2] = (-a * A + b * y - d * w) * ivd;
-	dest.Value[2][2] = (m * u - n * s + p * q) * ivd;
-	dest.Value[3][2] = (-i * u + j * s - l * q) * ivd;
-	dest.Value[0][3] = (-e * z + f * x - g * w) * ivd;
-	dest.Value[1][3] = (a * z - b * x + c * w) * ivd;
-	dest.Value[2][3] = (-m * t + n * r - o * q) * ivd;
-	dest.Value[3][3] = (i * t - j * r + k * q) * ivd;
-	return dest;
-}
 
+    //透视投影矩阵
+    /**
+     * x'=n*x/z
+     * y'=n*y/z
+     * z'=z
+     * 得到理论上的投影，还需要将其转换到CCV空间(正交投影)
+     * x''=2*n/(r-l)x/z-(r+l)/(r-l)
+     * y''=2*n/(t-b)y/z-(t+b)/(t-b)
+     * z''=2/(f-n)z-(f+n)/(f-n)
+     * 这时候把[x'',y'',z'']变为齐次坐标[x''z,y''z,z''z,z](显卡支持齐次坐标计算，自己用CPU计算太慢了)
+     * x''z=2*n/(r-l)x-(r+l)/(r-l)*z
+     * y''z=2*n/(t-b)y-(t+b)/(t-b)*z
+     * z''z=2/(f-n)z*z-(f+n)/(f-n)*z(这是理论值，实际上矩阵不支持乘方，只能线性变换)
+     * 线性变换有如下规则：
+     *      1:z''属于[-1,1]区间(CCV投影限制区域，这样可以不渲染在屏幕之外的像素，以及超出范围的顶点)
+     *      2:z''随着z增大而增大(为了消隐)
+     *      3:z''不可能随着xy的变化而变化
+     * 所以设:z''z=Az+B，z''=A+B/z(z属于区间[n,f])属于区间[-1,1],解得A=-(n+f)/(n-f) B=2fn/(n-f)
+     * z''z=-(n+f)/(n-f)z+2fn/(n-f)
+     */
+    //在将世界坐标转换为相机坐标时，即：若原先 a=f(z),a为相机空间的信息,z为世界坐标z值，统一变成a=f(-z)
+    //这就是下面两种透视矩阵第三列取反的原因
 Matrix4 Matrix4::PerspectiveProjection(double l, double r, double b, double t, double n, double f)
 {
 	double tmp[4][4] = {
