@@ -1,4 +1,4 @@
-#include "Matrix.h"
+ï»¿#include "Matrix.h"
 
 
 
@@ -17,7 +17,7 @@ void Matrix::Mult(double * a, double * b, int m, int n, int p, double * result)
 	{
 		for (int vn = 0; vn < n; vn++)
 		{
-			result[vm*n + vn] = 0;//¼ÆËãvmÐÐvnÁÐÊý¾Ý
+			result[vm*n + vn] = 0;//è®¡ç®—vmè¡Œvnåˆ—æ•°æ®
 			for (int vp = 0; vp < p; vp++)
 			{
 				result[vm*n + vn] += a[vm*p + vp] * b[vp*n + vn];

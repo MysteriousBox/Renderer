@@ -1,4 +1,4 @@
-#ifndef _Matrix4
+ï»¿#ifndef _Matrix4
 #define _Matrix4
 #include "Matrix.h"
 #include "Vector4.h"
@@ -11,13 +11,13 @@ public:
 		{0,1,0,0},
 		{0,0,1,0},
 		{0,0,0,1}
-	};//¾ØÕóÖµ
+	};//çŸ©é˜µå€¼
 	Matrix4(double value[4][4]);
 	Matrix4();
-	static Matrix4 QuickInverse(Matrix4& src);//4½×·½Õó¿ìËÙÄæ¾ØÕóËã·¨
-	static Matrix4 PerspectiveProjection(double l, double  r, double b, double t, double n, double f);//¸ø³öÍ¸ÊÓÍ¶Ó°¾ØÕó Perspective Matrix
-	static Matrix4 LookAt(Vector3& eye, Vector3& up, Vector3& dest);//View Matrix ²ÎÊı·Ö±ğÎªÏà»úÎ»ÖÃ£¬Ïà»úÉÏ·½Ïò³¯Ïò£¬Ä¿±êÊÓµã
-	static Matrix4 Rotate(Vector3& vec,double angle);//Ğı×ªÖáºÍĞı×ª½Ç¶È(½Ç¶ÈÖÆ)
+	static Matrix4 QuickInverse(Matrix4& src);//4é˜¶æ–¹é˜µå¿«é€Ÿé€†çŸ©é˜µç®—æ³•
+	static Matrix4 PerspectiveProjection(double l, double  r, double b, double t, double n, double f);//ç»™å‡ºé€è§†æŠ•å½±çŸ©é˜µ Perspective Matrix
+	static Matrix4 LookAt(Vector3& eye, Vector3& up, Vector3& dest);//View Matrix å‚æ•°åˆ†åˆ«ä¸ºç›¸æœºä½ç½®ï¼Œç›¸æœºä¸Šæ–¹å‘æœå‘ï¼Œç›®æ ‡è§†ç‚¹
+	static Matrix4 Rotate(Vector3& vec,double angle);//æ—‹è½¬è½´å’Œæ—‹è½¬è§’åº¦(è§’åº¦åˆ¶)
 	~Matrix4();
 };
 #endif // !_Matrix4

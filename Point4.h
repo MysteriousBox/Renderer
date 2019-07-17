@@ -1,4 +1,4 @@
-#ifndef _Point4
+﻿#ifndef _Point4
 #define _Point4
 class Point4
 {

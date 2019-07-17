@@ -1,4 +1,4 @@
-#include "Graphics.h"
+ï»¿#include "Graphics.h"
 #include <list>
 #include "Vector3.h"
 #pragma warning(disable:4996)
@@ -6,17 +6,17 @@
 Graphics::Graphics(int w, int h) :Width(w), Height(h)
 {
 	DepthBuffer = new double[w*h];
-	initgraph(w, h);   // ´´½¨»æÍ¼´°¿Ú£¬´óĞ¡Îª 640x480 ÏñËØ
+	initgraph(w, h);   // åˆ›å»ºç»˜å›¾çª—å£ï¼Œå¤§å°ä¸º 640x480 åƒç´ 
 	setfillcolor(RED);
 	g_pBuf = GetImageBuffer(NULL);
 }
-// ¿ìËÙ»­µãº¯Êı,¸´ÖÆÓÚ¹ÙÍø½Ì³Ìhttps://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
+// å¿«é€Ÿç”»ç‚¹å‡½æ•°,å¤åˆ¶äºå®˜ç½‘æ•™ç¨‹https://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
 void Graphics::fast_putpixel(int x, int y, COLORREF c)
 {
 	g_pBuf[y * Width + x] = BGR(c);
 }
 
-// ¿ìËÙ¶Áµãº¯Êı,¸´ÖÆÓÚ¹ÙÍø½Ì³Ìhttps://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
+// å¿«é€Ÿè¯»ç‚¹å‡½æ•°,å¤åˆ¶äºå®˜ç½‘æ•™ç¨‹https://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
 COLORREF Graphics::fast_getpixel(int x, int y)
 {
 	COLORREF c = g_pBuf[y * Width + x];
@@ -39,7 +39,7 @@ void Graphics::Draw()
 {
 	Point4 parray[3];//position Array
 	Point2 carray[3];//Coordinate Array
-	for (unsigned int i = 0; i < vbo->Count / 3; i++)//i±íÊ¾Èı½ÇĞÎÊıÁ¿
+	for (unsigned int i = 0; i < vbo->Count / 3; i++)//iè¡¨ç¤ºä¸‰è§’å½¢æ•°é‡
 	{
 		for (int j = 0; j < 3; j++)
 		{
@@ -49,20 +49,20 @@ void Graphics::Draw()
 			src[2] = vbo->Buffer[i * 9 + j * 3 + 2];
 			src[3] = 1;
 			double dest[4];
-			Matrix::Mult(MVPMatrix.Value[0], src, 4, 1, 4, dest);//ÀàËÆÓÚVertex shaderµÄ¹¦ÄÜ
+			Matrix::Mult(MVPMatrix.Value[0], src, 4, 1, 4, dest);//ç±»ä¼¼äºVertex shaderçš„åŠŸèƒ½
 			
-			parray[j].X = dest[0] / dest[3];//X,Y,Z°´ÕÕÆë´Î×ø±ê¹æÔòÕıÈ·»¹Ô­£¬WÔİÊ±²»»¹Ô­£¬ºóÃæ²åÖµ²»ÓÃ1/Z£¬¸ÄÎªÓÃ1/W²åÖµ
+			parray[j].X = dest[0] / dest[3];//X,Y,ZæŒ‰ç…§é½æ¬¡åæ ‡è§„åˆ™æ­£ç¡®è¿˜åŸï¼ŒWæš‚æ—¶ä¸è¿˜åŸï¼Œåé¢æ’å€¼ä¸ç”¨1/Zï¼Œæ”¹ä¸ºç”¨1/Wæ’å€¼
 			parray[j].Y = dest[1] / dest[3];
 			parray[j].Z = dest[2] / dest[3];
-			parray[j].W = dest[3];//¾­¹ı¾ØÕó¼ÆËã,W±ä³ÉÁËÔ­Ê¼µãµÄ-ZÖµ
+			parray[j].W = dest[3];//ç»è¿‡çŸ©é˜µè®¡ç®—,Wå˜æˆäº†åŸå§‹ç‚¹çš„-Zå€¼
 
 
-			parray[j].X = (parray[j].X + 1) / 2 * Width;//½«ccv¿Õ¼ä×ª»»µ½ÆÁÄ»¿Õ¼ä
+			parray[j].X = (parray[j].X + 1) / 2 * Width;//å°†ccvç©ºé—´è½¬æ¢åˆ°å±å¹•ç©ºé—´
 			parray[j].Y = Height - (parray[j].Y + 1) / 2 * Height;
 
 
 
-			carray[j].X = textureCoordinate->Buffer[i * 6 + j * 2];//ÎÆÀí×ø±ê×ª»»³ÉÎÆËØ×ø±ê
+			carray[j].X = textureCoordinate->Buffer[i * 6 + j * 2];//çº¹ç†åæ ‡è½¬æ¢æˆçº¹ç´ åæ ‡
 			carray[j].Y = textureCoordinate->Buffer[i * 6 + j * 2 + 1];
 		}
 		DrawTriangle(parray, carray);
@@ -76,19 +76,19 @@ void Graphics::clear()
 
 void Graphics::clearDepth()
 {
-	memset(DepthBuffer, 0x7f,sizeof(double)*Width*Height);//ÓÃ0x7f×÷ÎªmemsetÄÜ¸ã¶¨µÄ¼«´óÖµ£¬memsetÓ¦¸ÃÓĞÓÅ»¯£¬±ÈÈçµ÷ÓÃcpuµÄÌØÊâÖ¸Áî¿ÉÒÔÔÚ½Ï¶ÌµÄÖÜÆÚÄÚ¸³Öµ
+	memset(DepthBuffer, 0x7f,sizeof(double)*Width*Height);//ç”¨0x7fä½œä¸ºmemsetèƒ½æå®šçš„æå¤§å€¼ï¼Œmemsetåº”è¯¥æœ‰ä¼˜åŒ–ï¼Œæ¯”å¦‚è°ƒç”¨cpuçš„ç‰¹æ®ŠæŒ‡ä»¤å¯ä»¥åœ¨è¾ƒçŸ­çš„å‘¨æœŸå†…èµ‹å€¼
 }
 
-//±¾º¯ÊıÖĞ²åÖµ¼ÆËã¶¼ÊÇ²ÉÓÃdouble
+//æœ¬å‡½æ•°ä¸­æ’å€¼è®¡ç®—éƒ½æ˜¯é‡‡ç”¨double
 void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 {
 	/*
-	ÅĞ¶ÏÈı½ÇĞÎµÄÃæ»ıºÍ·½Ïò
+	åˆ¤æ–­ä¸‰è§’å½¢çš„é¢ç§¯å’Œæ–¹å‘
 	*/
 	Vector3 a(pArray[0].X - pArray[1].X, pArray[0].Y - pArray[1].Y, 0);
 	Vector3 b(pArray[0].X - pArray[2].X, pArray[0].Y - pArray[2].Y, 0);
-	//a bÏòÁ¿²æ³ËÏòÁ¿µÄz>0Ôò±íÊ¾ÄæÊ±Õë£¬·´Ö®Ë³Ê±Õë£¬Ãæ»ı²»Îª0¿Ï¶¨²»µÈÓÚ0
-	//²æ³ËÏòÁ¿µÄÄ£Îª0±íÊ¾Ãæ»ıÎª0
+	//a bå‘é‡å‰ä¹˜å‘é‡çš„z>0åˆ™è¡¨ç¤ºé€†æ—¶é’ˆï¼Œåä¹‹é¡ºæ—¶é’ˆï¼Œé¢ç§¯ä¸ä¸º0è‚¯å®šä¸ç­‰äº0
+	//å‰ä¹˜å‘é‡çš„æ¨¡ä¸º0è¡¨ç¤ºé¢ç§¯ä¸º0
 	Vector3 t=Vector3::CrossProduct(a, b);
 	if (t.Mod() == 0)
 	{
@@ -96,12 +96,12 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 	}
 	if (t.Z == 0)
 	{
-		OutputDebugString("´íÎó");
+		OutputDebugString("é”™è¯¯");
 		return;
 	}
 	if (enable_CW)
 	{
-		if (!CW_CCW)//Ë³Ê±Õë
+		if (!CW_CCW)//é¡ºæ—¶é’ˆ
 		{
 			if (t.Z > 0)
 			{
@@ -123,7 +123,7 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 	unsigned int Count = 3;
 	int Min = (int)pArray[0].Y;
 	int Max = (int)pArray[0].Y;
-	for (unsigned int i = 0; i < Count; i++)//¼ÇÂ¼×î´ó×îĞ¡Öµ
+	for (unsigned int i = 0; i < Count; i++)//è®°å½•æœ€å¤§æœ€å°å€¼
 	{
 		if ((int)pArray[i].Y > Max)
 		{
@@ -134,56 +134,56 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 			Min = (int)pArray[i].Y;
 		}
 	}
-	std::list<EdgeTableItem> AET;//»îĞÔ±ß±í
-	std::list<EdgeTableItem> *NET = new std::list<EdgeTableItem>[Max - Min+1];//ĞÂ±ß±í Èç¹ûmin=1 ,max=2 ÔòĞèÒª max-min+1=2-1+1ĞĞÉ¨ÃèÏß
-	for (unsigned int i = 0; i < Count; i++)//¶ÔÃ¿¸ö¶¥µã½øĞĞÉ¨Ãè²¢Ìí¼Óµ½NETÖĞ
+	std::list<EdgeTableItem> AET;//æ´»æ€§è¾¹è¡¨
+	std::list<EdgeTableItem> *NET = new std::list<EdgeTableItem>[Max - Min+1];//æ–°è¾¹è¡¨ å¦‚æœmin=1 ,max=2 åˆ™éœ€è¦ max-min+1=2-1+1è¡Œæ‰«æçº¿
+	for (unsigned int i = 0; i < Count; i++)//å¯¹æ¯ä¸ªé¡¶ç‚¹è¿›è¡Œæ‰«æå¹¶æ·»åŠ åˆ°NETä¸­
 	{
-		//YÔö´ó·½ÏòÖ¸ÏòÆÁÄ»ÏÂÃæ,°´ÕÕY·½ÏòÔö´óĞÂÔöÖÁNETºÍAET
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ßÒ»Ìõ(pArray[i-1])ÔÚÉ¨ÃèÏßÏÂÃæ£¬Ò»Ìõ(pArray[i+1])ÔÚÉ¨ÃèÏßÉÏÃæ
+		//Yå¢å¤§æ–¹å‘æŒ‡å‘å±å¹•ä¸‹é¢,æŒ‰ç…§Yæ–¹å‘å¢å¤§æ–°å¢è‡³NETå’ŒAET
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹ä¸€æ¡(pArray[i-1])åœ¨æ‰«æçº¿ä¸‹é¢ï¼Œä¸€æ¡(pArray[i+1])åœ¨æ‰«æçº¿ä¸Šé¢
 		if (pArray[(i + Count - 1) % Count].Y > pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y < pArray[(i + Count) % Count].Y)
 		{
 			NET[(int)pArray[(i + Count) % Count].Y - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].X, (pArray[(i + Count) % Count].X - pArray[(i + Count - 1) % Count].X) / (pArray[(i + Count) % Count].Y - pArray[(i + Count - 1) % Count].Y), pArray[(i + Count - 1) % Count].Y));
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ßÒ»Ìõ(pArray[i-1])ÔÚÉ¨ÃèÏßÉÏÃæ£¬Ò»Ìõ(pArray[i+1])ÔÚÉ¨ÃèÏßÏÂÃæ
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹ä¸€æ¡(pArray[i-1])åœ¨æ‰«æçº¿ä¸Šé¢ï¼Œä¸€æ¡(pArray[i+1])åœ¨æ‰«æçº¿ä¸‹é¢
 		else if (pArray[(i + Count - 1) % Count].Y < pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y > pArray[(i + Count) % Count].Y)
 		{
 			NET[(int)pArray[(i + Count) % Count].Y - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].X, (pArray[(i + Count) % Count].X - pArray[(i + Count + 1) % Count].X) / (pArray[(i + Count) % Count].Y - pArray[(i + Count + 1) % Count].Y), pArray[(i + Count + 1) % Count].Y));
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ßÒ»Ìõ(pArray[i-1])ÔÚÉ¨ÃèÏßÉÏÃæ£¬Ò»Ìõ(pArray[i+1])ºÍÉ¨ÃèÏßÖØºÏ
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹ä¸€æ¡(pArray[i-1])åœ¨æ‰«æçº¿ä¸Šé¢ï¼Œä¸€æ¡(pArray[i+1])å’Œæ‰«æçº¿é‡åˆ
 		else if (pArray[(i + Count - 1) % Count].Y < pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y == pArray[(i + Count) % Count].Y)
 		{
-			//¼ÇÂ¼0¸ö¶¥µã
+			//è®°å½•0ä¸ªé¡¶ç‚¹
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ßÒ»Ìõ(pArray[i-1])ºÍÉ¨ÃèÏßÖØºÏ£¬Ò»Ìõ(pArray[i+1])ÔÚÉ¨ÃèÏßÉÏÃæ
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹ä¸€æ¡(pArray[i-1])å’Œæ‰«æçº¿é‡åˆï¼Œä¸€æ¡(pArray[i+1])åœ¨æ‰«æçº¿ä¸Šé¢
 		else if (pArray[(i + Count - 1) % Count].Y == pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y < pArray[(i + Count) % Count].Y)
 		{
-			//¼ÇÂ¼0¸ö¶¥µã
+			//è®°å½•0ä¸ªé¡¶ç‚¹
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ßÒ»Ìõ(pArray[i-1])ÔÚÉ¨ÃèÏßÏÂÃæ£¬Ò»Ìõ(pArray[i+1])ºÍÉ¨ÃèÏßÖØºÏ
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹ä¸€æ¡(pArray[i-1])åœ¨æ‰«æçº¿ä¸‹é¢ï¼Œä¸€æ¡(pArray[i+1])å’Œæ‰«æçº¿é‡åˆ
 		else if (pArray[(i + Count - 1) % Count].Y > pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y == pArray[(i + Count) % Count].Y)
 		{
 			NET[(int)pArray[(i + Count) % Count].Y - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].X, (pArray[(i + Count) % Count].X - pArray[(i + Count - 1) % Count].X) / (pArray[(i + Count) % Count].Y - pArray[(i + Count - 1) % Count].Y), pArray[(i + Count - 1) % Count].Y));
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ßÒ»Ìõ(pArray[i-1])ºÍÉ¨ÃèÏßÖØºÏ£¬Ò»Ìõ(pArray[i+1])ÔÚÉ¨ÃèÏßÏÂÃæ
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹ä¸€æ¡(pArray[i-1])å’Œæ‰«æçº¿é‡åˆï¼Œä¸€æ¡(pArray[i+1])åœ¨æ‰«æçº¿ä¸‹é¢
 		else if (pArray[(i + Count - 1) % Count].Y == pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y > pArray[(i + Count) % Count].Y)
 		{
 			NET[(int)pArray[(i + Count) % Count].Y - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].X, (pArray[(i + Count) % Count].X - pArray[(i + Count + 1) % Count].X) / (pArray[(i + Count) % Count].Y - pArray[(i + Count + 1) % Count].Y), pArray[(i + Count + 1) % Count].Y));
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ß¶¼ÔÚÉ¨ÃèÏßÉÏ·½
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹éƒ½åœ¨æ‰«æçº¿ä¸Šæ–¹
 		else if (pArray[(i + Count - 1) % Count].Y < pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y < pArray[(i + Count) % Count].Y)
 		{
-			//¼ÇÂ¼0¸ö¶¥µã
+			//è®°å½•0ä¸ªé¡¶ç‚¹
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ß¶¼ÔÚÉ¨ÃèÏßÏÂ·½
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹éƒ½åœ¨æ‰«æçº¿ä¸‹æ–¹
 		else if (pArray[(i + Count - 1) % Count].Y > pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y > pArray[(i + Count) % Count].Y)
 		{
 			NET[(int)pArray[(i + Count) % Count].Y - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].X, (pArray[(i + Count) % Count].X - pArray[(i + Count - 1) % Count].X) / (pArray[(i + Count) % Count].Y - pArray[(i + Count - 1) % Count].Y), pArray[(i + Count - 1) % Count].Y));
 			NET[(int)pArray[(i + Count) % Count].Y - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].X, (pArray[(i + Count) % Count].X - pArray[(i + Count + 1) % Count].X) / (pArray[(i + Count) % Count].Y - pArray[(i + Count + 1) % Count].Y), pArray[(i + Count + 1) % Count].Y));
 		}
-		//¹²Ïí¶¥µãpArray[(i+Count)%Count]µÄÁ½Ìõ±ß¶¼ºÍÉ¨ÃèÏßÖØºÏ
+		//å…±äº«é¡¶ç‚¹pArray[(i+Count)%Count]çš„ä¸¤æ¡è¾¹éƒ½å’Œæ‰«æçº¿é‡åˆ
 		else if (pArray[(i + Count - 1) % Count].Y == pArray[(i + Count) % Count].Y&&pArray[(i + Count + 1) % Count].Y == pArray[(i + Count) % Count].Y)
 		{
-			//¼ÇÂ¼0¸ö¶¥µã
+			//è®°å½•0ä¸ªé¡¶ç‚¹
 		}
 		else
 		{
@@ -194,26 +194,26 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
 		AET.splice(it_end, NET[i - Min]);
-		AET.sort([](EdgeTableItem const & E1, EdgeTableItem const &E2) {return E1.x < E2.x; });//ÅÅĞò
+		AET.sort([](EdgeTableItem const & E1, EdgeTableItem const &E2) {return E1.x < E2.x; });//æ’åº
 		std::list<EdgeTableItem>::iterator s, e;
 		int CountPosite = 0;
 		for (std::list<EdgeTableItem>::iterator it = AET.begin(); it != AET.end();)
 		{
 			if ((int)it->Ymax <= i)
 			{
-				it = AET.erase(it);//µ±Ç°É¨ÃèÏßÒÑ¾­³¬¹ıitÕâÌõ±ßµÄYmax,½«it±ßÉ¾³ı
+				it = AET.erase(it);//å½“å‰æ‰«æçº¿å·²ç»è¶…è¿‡itè¿™æ¡è¾¹çš„Ymax,å°†itè¾¹åˆ é™¤
 			}
 			else
 			{
 				CountPosite++;
-				if (CountPosite % 2 == 1)//ÆğÊ¼¶¥µã
+				if (CountPosite % 2 == 1)//èµ·å§‹é¡¶ç‚¹
 				{
 					s = it;
 				}
 				else
 				{
 					e = it;
-					if (i >= 0 && i < (int)Height)//Ö»»æÖÆ³öÏÖÔÚÆÁÄ»·¶Î§Ö®ÄÚµÄÏñËØ
+					if (i >= 0 && i < (int)Height)//åªç»˜åˆ¶å‡ºç°åœ¨å±å¹•èŒƒå›´ä¹‹å†…çš„åƒç´ 
 					{
 						for (unsigned int j = (int)s->x; j < e->x; j++)
 						{
@@ -221,14 +221,14 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 							{
 								double Weight[3];
 								double coordinate_X, coordinate_Y;
-								Interpolation(pArray, j, i, Weight);//Ê¹ÓÃÖØĞÄ×ø±ê²åÖµ¼ÆËã³öÈı¸ö¶¥µã¶Ô(j,i)µÄÈ¨ÖØ
-								double depth = Weight[0] * pArray[0].Z + Weight[1] * pArray[1].Z + Weight[2] * pArray[2].Z;//¼ÆËãÉî¶ÈÖµ£¬Õâ¸öÖµËäÈ»²»ÊÇÏßĞÔµÄ£¬µ«ÊÇ¾­¹ıÏßĞÔ²åÖµÈÔÈ»ÄÜ±£Ö¤´óµÄ¸ü´ó£¬Ğ¡µÄ¸üĞ¡
+								Interpolation(pArray, j, i, Weight);//ä½¿ç”¨é‡å¿ƒåæ ‡æ’å€¼è®¡ç®—å‡ºä¸‰ä¸ªé¡¶ç‚¹å¯¹(j,i)çš„æƒé‡
+								double depth = Weight[0] * pArray[0].Z + Weight[1] * pArray[1].Z + Weight[2] * pArray[2].Z;//è®¡ç®—æ·±åº¦å€¼ï¼Œè¿™ä¸ªå€¼è™½ç„¶ä¸æ˜¯çº¿æ€§çš„ï¼Œä½†æ˜¯ç»è¿‡çº¿æ€§æ’å€¼ä»ç„¶èƒ½ä¿è¯å¤§çš„æ›´å¤§ï¼Œå°çš„æ›´å°
 								/*
-								 ÆÕÍ¨ÏßĞÔ²åÖµ¼ÆËã³ö(j,i)µÄÖµ:v=Weight[0]*v1+Weight[1]*v2+Weight[2]*v3
-								 Éî¶ÈÖµDepth:D(j,i)=1/z=Weight[0]*(1/z1)+Weight[1]*(1/z2)+Weight[2]*(1/z3)
-								 ¸ù¾İÍ¸ÊÓĞ£ÕıµÄÔ­Àí(j,i)µÄÖµ:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
+								 æ™®é€šçº¿æ€§æ’å€¼è®¡ç®—å‡º(j,i)çš„å€¼:v=Weight[0]*v1+Weight[1]*v2+Weight[2]*v3
+								 æ·±åº¦å€¼Depth:D(j,i)=1/z=Weight[0]*(1/z1)+Weight[1]*(1/z2)+Weight[2]*(1/z3)
+								 æ ¹æ®é€è§†æ ¡æ­£çš„åŸç†(j,i)çš„å€¼:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
 								*/
-								double originDepth = 1/(Weight[0] * (1 / pArray[0].W) + Weight[1] * (1 / pArray[1].W) + Weight[2] * (1 / pArray[2].W));//Õâ¸öÖµÊÇÔ­Ê¼Éî¶È
+								double originDepth = 1/(Weight[0] * (1 / pArray[0].W) + Weight[1] * (1 / pArray[1].W) + Weight[2] * (1 / pArray[2].W));//è¿™ä¸ªå€¼æ˜¯åŸå§‹æ·±åº¦
 
 								coordinate_X = originDepth * (textureCoordinate[0].X / pArray[0].W * Weight[0] + textureCoordinate[1].X / pArray[1].W * Weight[1] + textureCoordinate[2].X / pArray[2].W * Weight[2])* TextureWidth;
 								coordinate_Y = originDepth * (textureCoordinate[0].Y / pArray[0].W * Weight[0] + textureCoordinate[1].Y / pArray[1].W * Weight[1] + textureCoordinate[2].Y / pArray[2].W * Weight[2])* TextureHeight;
@@ -249,19 +249,19 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 								{
 									coordinate_Y = 0;
 								}
-								SetWorkingImage(&img);//ÓÃÓÚ¶ÁÈ¡ÎÆËØ
+								SetWorkingImage(&img);//ç”¨äºè¯»å–çº¹ç´ 
 								COLORREF c = getpixel((int)coordinate_X, (int)(TextureHeight - coordinate_Y));
-								SetWorkingImage(NULL);//»Ö¸´Ä¬ÈÏ»æÍ¼Éè±¸
-								if (DepthBuffer[i*Width+j]>depth)//ÒòÎªÔÚperspective MatrixÖĞÈ¡·´£¬ËùÒÔÓ¦¸ÃÊÇÖµÔ½Ğ¡Ôò½ü
+								SetWorkingImage(NULL);//æ¢å¤é»˜è®¤ç»˜å›¾è®¾å¤‡
+								if (DepthBuffer[i*Width+j]>depth)//å› ä¸ºåœ¨perspective Matrixä¸­å–åï¼Œæ‰€ä»¥åº”è¯¥æ˜¯å€¼è¶Šå°åˆ™è¿‘
 								{
-									fast_putpixel(j, i, c);//ÏÈÓÃÆÁÄ»¿Õ¼äÖØĞÄ²åÖµÇó³öÎÆÀí(ÔİÊ±²»¼ÓÍ¸ÊÓĞ£Õı) i É¨ÃèÏßĞòºÅ£¬jºá×ø±êĞòºÅ
-									DepthBuffer[i*Width + j] = depth;//¸üĞÂÉî¶ÈĞÅÏ¢
+									fast_putpixel(j, i, c);//å…ˆç”¨å±å¹•ç©ºé—´é‡å¿ƒæ’å€¼æ±‚å‡ºçº¹ç†(æš‚æ—¶ä¸åŠ é€è§†æ ¡æ­£) i æ‰«æçº¿åºå·ï¼Œjæ¨ªåæ ‡åºå·
+									DepthBuffer[i*Width + j] = depth;//æ›´æ–°æ·±åº¦ä¿¡æ¯
 								}
 							}
 						}
 					}
 					
-					s->x += s->dx;//¸üĞÂNET
+					s->x += s->dx;//æ›´æ–°NET
 					e->x += e->dx;
 				}
 				++it;
@@ -284,11 +284,11 @@ void Graphics::setTextureCoordinate(ABOd *Abo)
 void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight[3])
 {
 	/*
-	Á½µãÊ½£º
+	ä¸¤ç‚¹å¼ï¼š
 	  x-X1      y-Y1
 	------- =  -------
 	 X2-X1      Y2-Y1
-	 ×ª»¯ÎªÒ»°ãÊ½:
+	 è½¬åŒ–ä¸ºä¸€èˆ¬å¼:
 	 (Y2-Y1)*x-(X2-X1)*y-X1*(Y2-Y1)+Y1*(X2-X1)=0
 	 (Y2-Y1)*x-(X2-X1)*y+Y1*X2-Y2*X1=0
 	 (Y2-Y1)*x-(X2-X1)*y=Y2*X1-Y1*X2
@@ -304,23 +304,23 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 	double A22 = x - pArray[0].X;
 	double B2 = pArray[0].Y*x - y * pArray[0].X;
 
-	//³ı·ÇÈı½ÇĞÎµÄÁ½Ìõ±ßÆ½ĞĞ£¬·ñÔòÓĞ½â,ÓÃ¿ËÀ³Ä··¨Ôò¼´¿ÉÇó³ö½»µã(X,Y)
+	//é™¤éä¸‰è§’å½¢çš„ä¸¤æ¡è¾¹å¹³è¡Œï¼Œå¦åˆ™æœ‰è§£,ç”¨å…‹è±å§†æ³•åˆ™å³å¯æ±‚å‡ºäº¤ç‚¹(X,Y)
 	double X = (B1*A22 - A12 * B2) / (A11*A22 - A12 * A21);
 	double Y = (B2*A11 - A21 * B1) / (A11*A22 - A12 * A21);
 
 	double W0, W1, W2, Wt;
 	/*
-	Çó³ö(X,Y)¶ÔÓ¦µÄ²åÖµ
+	æ±‚å‡º(X,Y)å¯¹åº”çš„æ’å€¼
 	*/
 	if (pArray[2].Y - pArray[1].Y != 0)
 	{
-		W1 = (pArray[2].Y - Y) / (pArray[2].Y - pArray[1].Y);//P[2]È¨ÖØ weight
-		W2 = (Y - pArray[1].Y) / (pArray[2].Y - pArray[1].Y);//P[2]È¨ÖØ weight
+		W1 = (pArray[2].Y - Y) / (pArray[2].Y - pArray[1].Y);//P[2]æƒé‡ weight
+		W2 = (Y - pArray[1].Y) / (pArray[2].Y - pArray[1].Y);//P[2]æƒé‡ weight
 	}
 	else
 	{
-		W1 = (pArray[2].X - X) / (pArray[2].X - pArray[1].X);//P[2]È¨ÖØ weight
-		W2 = (X - pArray[1].X) / (pArray[2].X - pArray[1].X);//P[2]È¨ÖØ weight
+		W1 = (pArray[2].X - X) / (pArray[2].X - pArray[1].X);//P[2]æƒé‡ weight
+		W2 = (X - pArray[1].X) / (pArray[2].X - pArray[1].X);//P[2]æƒé‡ weight
 	}
 	if (pArray[0].Y - Y != 0)
 	{
@@ -345,7 +345,7 @@ Graphics::~Graphics()
 	{
 		delete DepthBuffer;
 	}
-	closegraph();          // ¹Ø±Õ»æÍ¼´°¿Ú
+	closegraph();          // å…³é—­ç»˜å›¾çª—å£
 }
 
 VBO::VBO(double * buffer, unsigned int count) :Count(count)

@@ -1,11 +1,11 @@
-#ifndef  _Vector
+ï»¿#ifndef  _Vector
 #define _Vector
 class Vector
 {
 public:
 	Vector();
-	virtual double Mod() = 0;//ÇóÄ£ÔËËã
-	virtual void Normalize()=0;//µ¥Î»»¯
+	virtual double Mod() = 0;//æ±‚æ¨¡è¿ç®—
+	virtual void Normalize()=0;//å•ä½åŒ–
 	virtual ~Vector();
 };
 #endif // ! _Vector

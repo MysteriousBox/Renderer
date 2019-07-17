@@ -1,11 +1,11 @@
-#ifndef _Matrix
+ï»¿#ifndef _Matrix
 #define _Matrix
 class Matrix
 {
 public:
 	Matrix();
-	static void Mult(double* a, double *b, int m, int n, int p, double* result);//¾ØÕóÏà³Ë,m aµÄĞĞÊı,n bµÄÁĞÊı ¼´a:m*p b:p*n
-	static void Transpose(double *a, int m, int n, double *result);//×ªÖÃ¾ØÕó
+	static void Mult(double* a, double *b, int m, int n, int p, double* result);//çŸ©é˜µç›¸ä¹˜,m açš„è¡Œæ•°,n bçš„åˆ—æ•° å³a:m*p b:p*n
+	static void Transpose(double *a, int m, int n, double *result);//è½¬ç½®çŸ©é˜µ
 	~Matrix();
 };
 #endif // !_Matrix

@@ -1,4 +1,4 @@
-#ifndef _Math
+﻿#ifndef _Math
 #define _Math
 namespace MyMath {
 	class Math

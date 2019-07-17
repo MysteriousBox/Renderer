@@ -1,7 +1,7 @@
-#ifndef _EdgeTable
+ï»¿#ifndef _EdgeTable
 #define _EdgeTable
 #include <stdio.h>
-class EdgeTableItem//»îĞÔ±ß±íÏî
+class EdgeTableItem//æ´»æ€§è¾¹è¡¨é¡¹
 {
 public:
 	double x=0, dx = 0, Ymax = 0;

@@ -1,6 +1,6 @@
-#ifndef _Point2
+ï»¿#ifndef _Point2
 #define _Point2
-class Point2//¸´ÖÆ¹¹ÔìºÍ¸³ÖµÓÃÇ³¿½±´Ä¿Ç°¹»ÁË
+class Point2//å¤åˆ¶æ„é€ å’Œèµ‹å€¼ç”¨æµ…æ‹·è´ç›®å‰å¤Ÿäº†
 {
 public:
 	double X, Y;

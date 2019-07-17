@@ -1,4 +1,4 @@
-#ifndef _Vector3
+ï»¿#ifndef _Vector3
 #define _Vector3
 #include "Point3.h"
 #include "Vector.h"
@@ -7,12 +7,12 @@ class Vector3:public Vector
 {
 public:
 	double X,Y,Z;
-	Vector3(Vector3& s, Vector3& d);//¹¹ÔìÒ»¸ösÖ¸ÏòdµÄÏòÁ¿
-	Vector3(double x,double y,double z);//¹¹ÔìÒ»¸öÏòÁ¿
-	Vector3(Vector2& s, double z);//¹¹ÔìÒ»¸öÏòÁ¿
+	Vector3(Vector3& s, Vector3& d);//æ„é€ ä¸€ä¸ªsæŒ‡å‘dçš„å‘é‡
+	Vector3(double x,double y,double z);//æ„é€ ä¸€ä¸ªå‘é‡
+	Vector3(Vector2& s, double z);//æ„é€ ä¸€ä¸ªå‘é‡
 	virtual void Normalize();
 	virtual double Mod();
-	static Vector3 CrossProduct(Vector3& a, Vector3& b);//¼ÆËãÁ½¸öÏòÁ¿µÄ²æ»ı
+	static Vector3 CrossProduct(Vector3& a, Vector3& b);//è®¡ç®—ä¸¤ä¸ªå‘é‡çš„å‰ç§¯
 	~Vector3();
 };
 #endif // !_Vector

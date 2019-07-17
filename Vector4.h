@@ -1,4 +1,4 @@
-#ifndef _Vector4
+﻿#ifndef _Vector4
 #define _Vector4
 #include "Vector.h"
 class Vector4 :

@@ -1,4 +1,4 @@
-#include "Math.h"
+﻿#include "Math.h"
 
 MyMath::Math::Math()
 {

@@ -1,4 +1,4 @@
-#include "Vector3.h"
+ï»¿#include "Vector3.h"
 #include <math.h>
 
 
@@ -35,11 +35,11 @@ Vector3 Vector3::CrossProduct(Vector3 & _a, Vector3 & _b)
 	double o = _b.X,
 		p = _b.Y,
 		q = _b.Z;
-	/**²æ³Ë¹«Ê½ÈçÏÂ
+	/**å‰ä¹˜å…¬å¼å¦‚ä¸‹
 	 * |i ,j ,k |
 	 * |ax,ay,az|
 	 * |bx,by,bz|
-	 * |c|=|a|*|b|*sin(¦È)
+	 * |c|=|a|*|b|*sin(Î¸)
 	 */
 	return Vector3(m * q - n * p, n * o - l * q, l * p - m * o);
 }

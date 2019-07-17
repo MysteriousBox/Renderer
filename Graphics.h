@@ -1,6 +1,6 @@
-#ifndef _Graphics
+ï»¿#ifndef _Graphics
 #define _Graphics
-#include <graphics.h>      // ÒıÓÃÍ¼ĞÎ¿âÍ·ÎÄ¼ş
+#include <graphics.h>      // å¼•ç”¨å›¾å½¢åº“å¤´æ–‡ä»¶
 #include "Point2.h"
 #include "Point4.h"
 #include "EdgeTableItem.h"
@@ -8,47 +8,47 @@
 class VBO//vertex buffer object
 {
 public:
-	double *Buffer;//Êı¾İ±ØĞë°´ÕÕx1,y1,z1,x2,y2,z2.......ÕâÑùµÄË³Ğò´æ·Å
+	double *Buffer;//æ•°æ®å¿…é¡»æŒ‰ç…§x1,y1,z1,x2,y2,z2.......è¿™æ ·çš„é¡ºåºå­˜æ”¾
 	unsigned int Count = 0;
-	VBO(double* buffer, unsigned int count);//¶¥µã¸öÊı
+	VBO(double* buffer, unsigned int count);//é¡¶ç‚¹ä¸ªæ•°
 	~VBO();
 };
-class ABOd//Attribute buffer object(double),ÔİÊ±Ö»ÄÜÓÃÓÚÉèÖÃÎÆÀí×ø±ê
+class ABOd//Attribute buffer object(double),æš‚æ—¶åªèƒ½ç”¨äºè®¾ç½®çº¹ç†åæ ‡
 {
 public:
 	double *Buffer;
 	unsigned int Count = 0;
-	unsigned int NumOfvertex = 0;//µ¥¸ö¶¥µãÊı¾İÁ¿
-	ABOd(double* buffer, unsigned int NumOfvertex, unsigned int count);//½«Êı¾İ¸´ÖÆµ½Ö¸¶¨Î»ÖÃ,NumOfvertexÃ¿¸ö¶¥µãµÄÊı¾İÁ¿£¬count¶¥µã¸öÊı
+	unsigned int NumOfvertex = 0;//å•ä¸ªé¡¶ç‚¹æ•°æ®é‡
+	ABOd(double* buffer, unsigned int NumOfvertex, unsigned int count);//å°†æ•°æ®å¤åˆ¶åˆ°æŒ‡å®šä½ç½®,NumOfvertexæ¯ä¸ªé¡¶ç‚¹çš„æ•°æ®é‡ï¼Œcounté¡¶ç‚¹ä¸ªæ•°
 	~ABOd();
 };
 class Graphics
 {
-	/*×ø±êÏµÊÇÉÏÃæÎªYÕı·½Ïò£¬ÓÒÃæÎªXÕı·½Ïò£¬ÆÁÄ»ÏòÍâÎªZÕı·½Ïò*/
+	/*åæ ‡ç³»æ˜¯ä¸Šé¢ä¸ºYæ­£æ–¹å‘ï¼Œå³é¢ä¸ºXæ­£æ–¹å‘ï¼Œå±å¹•å‘å¤–ä¸ºZæ­£æ–¹å‘*/
 public:
-	bool enable_CW=true;//ÊÇ·ñÆôÓÃË³Ê±ÕëÄæÊ±ÕëÈı½ÇĞÎÌŞ³ı
-	bool CW_CCW = false;//Ä¬ÈÏÄæÊ±Õë,trueÎªË³Ê±Õë
-	Matrix4 MVPMatrix;//MVP¾ØÕó
-	unsigned int Width, Height;//»æÍ¼Éè±¸¿í¸ß
+	bool enable_CW=true;//æ˜¯å¦å¯ç”¨é¡ºæ—¶é’ˆé€†æ—¶é’ˆä¸‰è§’å½¢å‰”é™¤
+	bool CW_CCW = false;//é»˜è®¤é€†æ—¶é’ˆ,trueä¸ºé¡ºæ—¶é’ˆ
+	Matrix4 MVPMatrix;//MVPçŸ©é˜µ
+	unsigned int Width, Height;//ç»˜å›¾è®¾å¤‡å®½é«˜
 	Graphics(int w, int h);
 	void setVBO(VBO* vbo);
 	void setTextureCoordinate(ABOd* Abo);
-	void Interpolation(Point4 parry[3],double x,double y,double Weight[3]);//Ê¹ÓÃÆÁÄ»×ø±ê²åÖµ¼ÆËãÈı½ÇĞÎ¸÷¸ö¶¥µãµÄÈ¨ÖØ²¢±£´æÔÚWeightÖĞ
+	void Interpolation(Point4 parry[3],double x,double y,double Weight[3]);//ä½¿ç”¨å±å¹•åæ ‡æ’å€¼è®¡ç®—ä¸‰è§’å½¢å„ä¸ªé¡¶ç‚¹çš„æƒé‡å¹¶ä¿å­˜åœ¨Weightä¸­
 	~Graphics();
 	void fast_putpixel(int x, int y, COLORREF c);
 	COLORREF fast_getpixel(int x, int y);
-	void LoadTexture(const char* filename);//¼ÓÔØÎÆÀí
-	void flush();// Ê¹Õë¶Ô»æÍ¼´°¿ÚµÄÏÔ´æ²Ù×÷ÉúĞ§
+	void LoadTexture(const char* filename);//åŠ è½½çº¹ç†
+	void flush();// ä½¿é’ˆå¯¹ç»˜å›¾çª—å£çš„æ˜¾å­˜æ“ä½œç”Ÿæ•ˆ
 	void Draw();
 	void clear();
-	void clearDepth();//ÇåÀíÉî¶È»º³åÇø
+	void clearDepth();//æ¸…ç†æ·±åº¦ç¼“å†²åŒº
 private:
 	IMAGE img;
-	int TextureHeight,TextureWidth;//ÎÆÀí¿í¸ß
-	void DrawTriangle(Point4* pointArray,Point2* textureCoordinate);//Ê¹ÓÃÉ¨ÃèÏßÌî³äËã·¨»æÖÆÈı½ÇĞÎ
-	DWORD *g_pBuf;//ÏÔ´æÖ¸Õë
+	int TextureHeight,TextureWidth;//çº¹ç†å®½é«˜
+	void DrawTriangle(Point4* pointArray,Point2* textureCoordinate);//ä½¿ç”¨æ‰«æçº¿å¡«å……ç®—æ³•ç»˜åˆ¶ä¸‰è§’å½¢
+	DWORD *g_pBuf;//æ˜¾å­˜æŒ‡é’ˆ
 	VBO *vbo;
 	ABOd *textureCoordinate;
-	double* DepthBuffer = NULL;//Éî¶È»º³åÇø
+	double* DepthBuffer = NULL;//æ·±åº¦ç¼“å†²åŒº
 };
 #endif // !_GRAPHICS
