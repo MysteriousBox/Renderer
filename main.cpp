@@ -29,7 +29,7 @@ int main()
 	gp.LoadTexture("texture.png");
 
 	/*坐标系是上面为Y正方向，右面为X正方向，屏幕向外为Z正方向*/
-	Vector3 eyePosition(0, 0, 10); //相机原点
+	Vector3 eyePosition(0, 0, 9); //相机原点
 	Vector3 up(0, 1, 0); //相机上方向
 	Vector3 destination(0, 0, -10000); //相机看向的点
 	Matrix4 vMatrix = Matrix4::LookAt(eyePosition, up, destination);
