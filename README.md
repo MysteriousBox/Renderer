@@ -1,5 +1,5 @@
 # 大部分说明在源码中可以看见，这个项目是在尝试做软件渲染器时边想边做的，模仿了很多OpenGL的API定义
-
+## 需要安装[easyx 下载](https://easyx.cn/)
 软件直接运行可以得到如下的效果：
 
 ![运行效果](https://github.com/yangzhenzhuozz/Shader/blob/master/result.gif?raw=true)
