@@ -50,7 +50,7 @@ void Graphics::Draw()
 			src[3] = 1;
 			double dest[4];
 			Matrix::Mult(MVPMatrix.Value[0], src, 4, 1, 4, dest);//类似于Vertex shader的功能
-			
+
 			parray[j].X = dest[0] / dest[3];//X,Y,Z按照齐次坐标规则正确还原，W暂时不还原，后面插值不用1/Z，改为用1/W插值
 			parray[j].Y = dest[1] / dest[3];
 			parray[j].Z = dest[2] / dest[3];
@@ -76,7 +76,7 @@ void Graphics::clear()
 
 void Graphics::clearDepth()
 {
-	memset(DepthBuffer, 0x7f,sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
+	memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
 }
 
 void Graphics::SwapS()
@@ -99,7 +99,7 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 	Vector3 b(pArray[0].X - pArray[2].X, pArray[0].Y - pArray[2].Y, 0);
 	//a b向量叉乘向量的z>0则表示逆时针，反之顺时针，面积不为0肯定不等于0
 	//叉乘向量的模为0表示面积为0
-	Vector3 t=Vector3::CrossProduct(a, b);
+	Vector3 t = Vector3::CrossProduct(a, b);
 	if (t.Mod() == 0)
 	{
 		return;
@@ -145,7 +145,7 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 		}
 	}
 	std::list<EdgeTableItem> AET;//活性边表
-	std::list<EdgeTableItem> *NET = new std::list<EdgeTableItem>[Max - Min+1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
+	std::list<EdgeTableItem> *NET = new std::list<EdgeTableItem>[Max - Min + 1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
 	for (unsigned int i = 0; i < Count; i++)//对每个顶点进行扫描并添加到NET中
 	{
 		//Y增大方向指向屏幕下面,按照Y方向增大新增至NET和AET
@@ -238,7 +238,7 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 								 深度值Depth:D(j,i)=1/z=Weight[0]*(1/z1)+Weight[1]*(1/z2)+Weight[2]*(1/z3)
 								 根据透视校正的原理(j,i)的值:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
 								*/
-								double originDepth = 1/(Weight[0] * (1 / pArray[0].W) + Weight[1] * (1 / pArray[1].W) + Weight[2] * (1 / pArray[2].W));//这个值是原始深度
+								double originDepth = 1 / (Weight[0] * (1 / pArray[0].W) + Weight[1] * (1 / pArray[1].W) + Weight[2] * (1 / pArray[2].W));//这个值是原始深度
 
 								coordinate_X = originDepth * (textureCoordinate[0].X / pArray[0].W * Weight[0] + textureCoordinate[1].X / pArray[1].W * Weight[1] + textureCoordinate[2].X / pArray[2].W * Weight[2])* TextureWidth;
 								coordinate_Y = originDepth * (textureCoordinate[0].Y / pArray[0].W * Weight[0] + textureCoordinate[1].Y / pArray[1].W * Weight[1] + textureCoordinate[2].Y / pArray[2].W * Weight[2])* TextureHeight;
@@ -262,7 +262,7 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 								SetWorkingImage(&img);//用于读取纹素
 								COLORREF c = getpixel((int)coordinate_X, (int)(TextureHeight - coordinate_Y));
 								SetWorkingImage(NULL);//恢复默认绘图设备
-								if (DepthBuffer[i*Width+j]>depth)//因为在perspective Matrix中取反，所以应该是值越小则近
+								if (DepthBuffer[i*Width + j] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
 								{
 									fast_putpixel(j, i, c);//先用屏幕空间重心插值求出纹理(暂时不加透视校正) i 扫描线序号，j横坐标序号
 									DepthBuffer[i*Width + j] = depth;//更新深度信息
@@ -270,7 +270,7 @@ void Graphics::DrawTriangle(Point4* pArray, Point2* textureCoordinate)
 							}
 						}
 					}
-					
+
 					s->x += s->dx;//更新NET
 					e->x += e->dx;
 				}

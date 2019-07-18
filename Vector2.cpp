@@ -1,7 +1,7 @@
 ﻿#include "Vector2.h"
 #include <math.h>
 
-Vector2::Vector2(double x, double y):X(x),Y(y)
+Vector2::Vector2(double x, double y) :X(x), Y(y)
 {
 }
 

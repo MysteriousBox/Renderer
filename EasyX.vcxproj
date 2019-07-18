@@ -118,7 +118,6 @@
   <ItemGroup>
     <ClInclude Include="EdgeTableItem.h" />
     <ClInclude Include="Graphics.h" />
-    <ClInclude Include="Math.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Matrix4.h" />
     <ClInclude Include="Point2.h" />
@@ -133,7 +132,6 @@
     <ClCompile Include="EdgeTableItem.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Math.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="Point2.cpp" />

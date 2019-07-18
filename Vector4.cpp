@@ -2,11 +2,11 @@
 #include <math.h>
 
 
-Vector4::Vector4():X(1),Y(1),Z(1),W(1)
+Vector4::Vector4() :X(1), Y(1), Z(1), W(1)
 {
 }
 
-Vector4::Vector4(double x, double y, double z, double w):X(x),Y(y),Z(z),W(w)
+Vector4::Vector4(double x, double y, double z, double w) : X(x), Y(y), Z(z), W(w)
 {
 }
 
