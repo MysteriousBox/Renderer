@@ -42,6 +42,8 @@ public:
 	void Draw();
 	void clear();
 	void clearDepth();//清理深度缓冲区
+	void SwapS();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
+	void SwapE();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 private:
 	IMAGE img;
 	int TextureHeight,TextureWidth;//纹理宽高
