@@ -4,7 +4,7 @@
 使用vs直接打开EasyX.vcxproj即可  
 软件直接运行可以得到如下的效果：
 
-![运行效果](https://github.com/yangzhenzhuozz/Shader/blob/master/result.gif?raw=true)
+![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Shader/master/result.gif)
 
 如果想要变得更大，只需要在main.cpp中将距离拉近即可，但是因为是逐像素绘制，所以当绘制图像像素变多时，速度会相应降低
 ```
