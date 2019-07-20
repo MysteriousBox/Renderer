@@ -2,12 +2,14 @@
 #include <math.h>
 
 
-Point2::Point2() :X(0), Y(0)
+Point2::Point2()
 {
 }
 
-Point2::Point2(double x, double y) : X(x), Y(y)
+Point2::Point2(double x, double y)
 {
+	value[0] = x;
+	value[1] = y;
 }
 
 

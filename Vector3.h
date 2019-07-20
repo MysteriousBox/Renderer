@@ -6,7 +6,7 @@
 class Vector3 :public Vector
 {
 public:
-	double X, Y, Z;
+	double value[3];//value[0]表示X,value[1]表示Y,value[2]表示Z,value[3]表示W
 	Vector3(Vector3& s, Vector3& d);//构造一个s指向d的向量
 	Vector3(double x, double y, double z);//构造一个向量
 	Vector3(Vector2& s, double z);//构造一个向量

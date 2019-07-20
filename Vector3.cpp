@@ -2,39 +2,48 @@
 #include <math.h>
 
 
-Vector3::Vector3(Vector3 & s, Vector3 & d) :X(d.X - s.X), Y(d.Y - s.Y), Z(d.Z - s.Z)
+Vector3::Vector3(Vector3& s, Vector3& d)
 {
+	value[0] = (d.value[0] - s.value[0]);
+	value[1] = (d.value[1] - s.value[1]);
+	value[2] = (d.value[2] - s.value[2]);
 }
 
-Vector3::Vector3(double x, double y, double z) : X(x), Y(y), Z(z)
+Vector3::Vector3(double x, double y, double z)
 {
+	value[0] = x;
+	value[1] = y;
+	value[2] = z;
 }
 
-Vector3::Vector3(Vector2 &s, double z) : X(s.X), Y(s.Y), Z(z)
+Vector3::Vector3(Vector2& s, double z)
 {
+	value[0] = (s.value[0]);
+	value[1] = (s.value[1]);
+	value[2] = (z);
 }
 
 void Vector3::Normalize()
 {
 	double mod = Mod();
-	X = X / mod;
-	Y = Y / mod;
-	Z = Z / mod;
+	value[0] = value[0] / mod;
+	value[1] = value[1] / mod;
+	value[2] = value[2] / mod;
 }
 
 double Vector3::Mod()
 {
-	return sqrt(X*X + Y * Y + Z * Z);
+	return sqrt(value[0] * value[0] + value[1] * value[1] + value[2] * value[2]);
 }
 
-Vector3 Vector3::CrossProduct(Vector3 & _a, Vector3 & _b)
+Vector3 Vector3::CrossProduct(Vector3& _a, Vector3& _b)
 {
-	double l = _a.X,
-		m = _a.Y,
-		n = _a.Z;
-	double o = _b.X,
-		p = _b.Y,
-		q = _b.Z;
+	double l = _a.value[0],
+		m = _a.value[1],
+		n = _a.value[2];
+	double o = _b.value[0],
+		p = _b.value[1],
+		q = _b.value[2];
 	/**叉乘公式如下
 	 * |i ,j ,k |
 	 * |ax,ay,az|

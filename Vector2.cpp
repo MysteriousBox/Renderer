@@ -1,8 +1,10 @@
 ﻿#include "Vector2.h"
 #include <math.h>
 
-Vector2::Vector2(double x, double y) :X(x), Y(y)
+Vector2::Vector2(double x, double y)
 {
+	value[0] = x;
+	value[1] = y;
 }
 
 Vector2::~Vector2()
@@ -11,12 +13,12 @@ Vector2::~Vector2()
 
 double Vector2::Mod()
 {
-	return sqrt(X*X + Y * Y);
+	return sqrt(value[0] * value[0] + value[1] * value[1]);
 }
 
 void Vector2::Normalize()
 {
 	double mod = Mod();
-	X = X / mod;
-	Y = Y / mod;
+	value[0] = value[0] / mod;
+	value[1] = value[1] / mod;
 }

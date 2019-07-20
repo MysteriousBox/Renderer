@@ -70,9 +70,9 @@ Matrix4 Matrix4::LookAt(Vector3 & eye, Vector3 & up, Vector3 & dest)
 		[0, 0, 0, 1]];//平移矩阵
 	*/
 	double T[4][4] = {
-		{1, 0, 0, -eye.X },
-	{0, 1, 0, -eye.Y},
-	{0, 0, 1, -eye.Z},
+		{1, 0, 0, -eye.value[0] },
+	{0, 1, 0, -eye.value[1]},
+	{0, 0, 1, -eye.value[2]},
 	{0, 0, 0, 1}
 	}; //平移矩阵的逆矩阵
 	/*
@@ -86,9 +86,9 @@ Matrix4 Matrix4::LookAt(Vector3 & eye, Vector3 & up, Vector3 & dest)
 	*/
 	double R[4][4] = //A逆矩阵
 	{
-			{x.X, x.Y, x.Z, 0},
-			{y.X, y.Y, y.Z, 0},
-			{-z.X, -z.Y, -z.Z, 0},
+			{x.value[0], x.value[1], x.value[2], 0},
+			{y.value[0], y.value[1], y.value[2], 0},
+			{-z.value[0], -z.value[1], -z.value[2], 0},
 			{0, 0, 0, 1}
 	};
 	Matrix4 a(R);
@@ -101,9 +101,9 @@ Matrix4 Matrix4::LookAt(Vector3 & eye, Vector3 & up, Vector3 & dest)
 Matrix4 Matrix4::Rotate(Vector3 & vec, double angle)
 {
 	double radian = angle * PI / 180; //转为弧度制
-	double u = vec.X;
-	double v = vec.Y;
-	double w = vec.Z;
+	double u = vec.value[0];
+	double v = vec.value[1];
+	double w = vec.value[2];
 	double s = u * u + v * v + w * w;
 	double sq = sqrt(s);
 	double cosine = cos(radian);
