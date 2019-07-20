@@ -9,6 +9,13 @@ Graphics::Graphics(int w, int h) :Width(w), Height(h)
 	initgraph(w, h);   // 创建绘图窗口，大小为 640x480 像素
 	setfillcolor(RED);
 	g_pBuf = GetImageBuffer(NULL);
+	FragmentShader = NULL;
+	VertexShader = NULL;
+	TextureHeight = 0;
+	TextureWidth = 0;
+	TransmitAbo = NULL;
+	abo = NULL;
+	vbo = NULL;
 }
 // 快速画点函数,复制于官网教程https://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
 void Graphics::fast_putpixel(int x, int y, COLORREF c)
