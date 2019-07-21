@@ -218,7 +218,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 					e = it;
 					if (i >= 0 && i < (int)Height)//只绘制出现在屏幕范围之内的像素
 					{
-						for (unsigned int j = (int)s->x; j < e->x; j++)
+						for (unsigned int j = max((int)s->x,0); j < min(e->x,Width); j++)
 						{
 							if (j >= 0 && j < Width)
 							{
