@@ -36,7 +36,7 @@ class Graphics
 {
 	/*坐标系是上面为Y正方向，右面为X正方向，屏幕向外为Z正方向*/
 public:
-	char errmsg[1024];//错误信息，如果执行出错则可以读取本信息
+	char errmsg[1024] = {'0'};//错误信息，如果执行出错则可以读取本信息
 	void (*VertexShader)(double const vbo[3],double *abo,Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
 	/*
 	Position对应了OpenGL的gl_Position，
@@ -65,14 +65,15 @@ public:
 	void flush();// 使针对绘图窗口的显存操作生效
 	void Draw();
 	void clear();
-	void clearDepth();//清理深度缓冲区
-	void SwapS();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
-	void SwapE();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
+	void clearDepth(double v);//清理深度缓冲区,注意这里是使用memset来填充的，所以假如c=0x01，对应像素的深度值是一个dobule类型8字节,则实际上会被填充成0x0101010101010101
+	void SwapStart();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
+	void SwapEnd();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 	COLORREF texture2D(double x, double y);//读取纹理中的颜色
 private:
-	int bmpHeight, bmpwidth;//位图宽高
-	unsigned char* bmpData;//位图数据区
-	unsigned char* textureBuffer;//纹理缓冲区，保存bmp位图
+	int bmpHeight = 0;
+	int bmpwidth = 0;//位图宽高
+	unsigned char* bmpData = NULL;//位图数据区
+	unsigned char* textureBuffer = NULL;//纹理缓冲区，保存bmp位图
 	IMAGE img;
 	double* TransmitAbo;//从顶点着色器传递到片元着色器的ABO
 	int TextureHeight, TextureWidth;//纹理宽高

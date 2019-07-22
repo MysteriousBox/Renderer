@@ -4,11 +4,12 @@
 #include <wingdi.h>
 #include <stdio.h>
 #include <io.h>
+#include <algorithm>
 #pragma warning(disable:4996)
 
 Graphics::Graphics(int w, int h) :Width(w), Height(h)
 {
-	DepthBuffer = new double[w*h];
+	DepthBuffer = new double[w * h];
 	initgraph(w, h);   // 创建绘图窗口，大小为 640x480 像素
 	setfillcolor(RED);
 	g_pBuf = GetImageBuffer(NULL);
@@ -33,7 +34,7 @@ COLORREF Graphics::fast_getpixel(int x, int y)
 	return BGR(c);
 }
 
-void Graphics::LoadTexture(const char * filename)
+void Graphics::LoadTexture(const char* filename)
 {
 
 	loadimage(&img, _T(filename));
@@ -41,7 +42,7 @@ void Graphics::LoadTexture(const char * filename)
 	TextureWidth = img.getwidth();
 }
 
-bool Graphics::loadBMP(const char * filename)
+bool Graphics::loadBMP(const char* filename)
 {
 	errmsg[0] = '\0';//清空错误信息
 	char tmp[1024];
@@ -54,8 +55,8 @@ bool Graphics::loadBMP(const char * filename)
 		fread(textureBuffer, size, 1, file);//读取文件到内存
 		fclose(file);
 
-		tagBITMAPFILEHEADER *fhead = (tagBITMAPFILEHEADER*)textureBuffer;
-		tagBITMAPINFOHEADER *ihead = (tagBITMAPINFOHEADER*)(textureBuffer + sizeof(tagBITMAPFILEHEADER));
+		tagBITMAPFILEHEADER* fhead = (tagBITMAPFILEHEADER*)textureBuffer;
+		tagBITMAPINFOHEADER* ihead = (tagBITMAPINFOHEADER*)(textureBuffer + sizeof(tagBITMAPFILEHEADER));
 		if (ihead->biHeight < 0)
 		{
 			isError = true;
@@ -77,6 +78,12 @@ bool Graphics::loadBMP(const char * filename)
 		bmpHeight = ihead->biHeight;
 		bmpwidth = ihead->biWidth;//保存位图宽高
 		bmpData = textureBuffer + fhead->bfOffBits;
+	}
+	else
+	{
+		isError = true;
+		sprintf_s(tmp, sizeof(tmp), "文件打开失败\n");
+		strcat_s(errmsg, sizeof(errmsg), tmp);
 	}
 	return isError;
 }
@@ -102,6 +109,41 @@ void Graphics::Draw()
 			parray[j].value[0] = (parray[j].value[0] + 1) / 2 * Width;//将ccv空间转换到屏幕空间
 			parray[j].value[1] = Height - (parray[j].value[1] + 1) / 2 * Height;
 		}
+		//经过反复考虑，不需要对X,Y做相交检查，因为实际上在扫描线填充的时候会自动忽略掉这些点
+		if ((parray[0].value[2] < -1 && parray[1].value[2] < -1 && parray[2].value[2] < -1)//三角形深度值全部小于-1
+			|| (parray[0].value[2] > 1 && parray[1].value[2] > 1 && parray[2].value[2] > 1))//三角形深度值全部超过1
+		{//以上这几种情况三角形不会有任意一个像素会投影到当前屏幕，所以可以不绘制
+			continue;
+		}
+		/*
+		判断三角形的面积和方向
+		*/
+		Vector3 a(parray[0].value[0] - parray[1].value[0], parray[0].value[1] - parray[1].value[1], 0);
+		Vector3 b(parray[0].value[0] - parray[2].value[0], parray[0].value[1] - parray[2].value[1], 0);
+		//a b向量叉乘向量的z>0则表示逆时针，反之顺时针，面积不为0肯定不等于0
+		//叉乘向量的模为0表示面积为0
+		Vector3 t = Vector3::CrossProduct(a, b);
+		if (t.Mod() == 0)
+		{
+			continue;
+		}
+		if (enable_CW)
+		{
+			if (!CW_CCW)//使用顺时针绘制
+			{
+				if (t.value[2] > 0)//实际确实逆时针
+				{
+					continue;
+				}
+			}
+			else//同上
+			{
+				if (t.value[2] < 0)
+				{
+					continue;
+				}
+			}
+		}
 		DrawTriangle(parray);
 	}
 }
@@ -111,17 +153,18 @@ void Graphics::clear()
 	cleardevice();
 }
 
-void Graphics::clearDepth()
+void Graphics::clearDepth(double v)
 {
-	memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
+	std::fill(DepthBuffer, DepthBuffer + (Width * Height), v);//有SSE优化
+	//memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
 }
 
-void Graphics::SwapS()
+void Graphics::SwapStart()
 {
 	BeginBatchDraw();
 }
 
-void Graphics::SwapE()
+void Graphics::SwapEnd()
 {
 	EndBatchDraw();
 }
@@ -133,14 +176,14 @@ COLORREF Graphics::texture2D(double x, double y)
 	int CountOfRowSize = (((bmpwidth * 24) + 31) >> 5) << 2;//每行像素所占用的字节
 	if (textureBuffer != NULL)
 	{
-		int X = (int)(x*bmpwidth);
-		int Y = (int)(y*bmpHeight);
-		return RGB(bmpData[Y*CountOfRowSize + X * 3 + 2], bmpData[Y*CountOfRowSize + X * 3 + 1], bmpData[Y*CountOfRowSize + X * 3]);
+		int X = (int)(x * bmpwidth);
+		int Y = (int)(y * bmpHeight);
+		return RGB(bmpData[Y * CountOfRowSize + X * 3 + 2], bmpData[Y * CountOfRowSize + X * 3 + 1], bmpData[Y * CountOfRowSize + X * 3]);
 	}
 	else
 	{
 		SetWorkingImage(&img);//用于读取纹素
-		COLORREF c = getpixel((int)(x*TextureWidth), TextureHeight - (int)(y*TextureHeight));
+		COLORREF c = getpixel((int)(x * TextureWidth), TextureHeight - (int)(y * TextureHeight));
 		SetWorkingImage(NULL);//恢复默认绘图设备
 		return c;
 	}
@@ -149,36 +192,7 @@ COLORREF Graphics::texture2D(double x, double y)
 //本函数中插值计算都是采用double
 void Graphics::DrawTriangle(Point4* pArray)
 {
-	/*
-	判断三角形的面积和方向
-	*/
-	Vector3 a(pArray[0].value[0] - pArray[1].value[0], pArray[0].value[1] - pArray[1].value[1], 0);
-	Vector3 b(pArray[0].value[0] - pArray[2].value[0], pArray[0].value[1] - pArray[2].value[1], 0);
-	//a b向量叉乘向量的z>0则表示逆时针，反之顺时针，面积不为0肯定不等于0
-	//叉乘向量的模为0表示面积为0
-	Vector3 t = Vector3::CrossProduct(a, b);
-	if (t.Mod() == 0)
-	{
-		return;
-	}
-	if (enable_CW)
-	{
-		if (!CW_CCW)//顺时针
-		{
-			if (t.value[2] > 0)
-			{
-				return;
-			}
-		}
-		else
-		{
-			if (t.value[2] < 0)
-			{
-				return;
-			}
-		}
-	}
-	unsigned int Count = 3;
+	unsigned int Count = 3;//顶点数量
 	int Min = (int)pArray[0].value[1];
 	int Max = (int)pArray[0].value[1];
 	for (unsigned int i = 0; i < Count; i++)//记录扫描线最大最小值
@@ -192,20 +206,50 @@ void Graphics::DrawTriangle(Point4* pArray)
 			Min = (int)pArray[i].value[1];
 		}
 	}
+	Min = max(0, Min);//记录扫描线最小值
+	Max = min(Max,(int)Height);//记录扫描线最大值
 	std::list<EdgeTableItem> AET;//活性边表
-	std::list<EdgeTableItem> *NET = new std::list<EdgeTableItem>[Max - Min + 1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
+	std::list<EdgeTableItem>* NET = new std::list<EdgeTableItem>[Max-Min+1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
 	for (unsigned int i = 0; i < Count; i++)//对每个顶点进行扫描并添加到NET中
 	{
 		//Y增大方向指向屏幕下面,按照Y方向增大新增至NET和AET
-		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线下面，一条(pArray[i+1])在扫描线上面
+		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线下面，一条(pArray[i+1])在扫描线上面,记录i-1
 		if (pArray[(i + Count - 1) % Count].value[1] > pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] < pArray[(i + Count) % Count].value[1])
 		{
-			NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]), pArray[(i + Count - 1) % Count].value[1]));
+			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			{
+				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
+				{
+					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
+					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
+					{
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+					}
+					else
+					{
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
+					}
+				}
+			}
 		}
-		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线上面，一条(pArray[i+1])在扫描线下面
+		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线上面，一条(pArray[i+1])在扫描线下面,记录i+1
 		else if (pArray[(i + Count - 1) % Count].value[1] < pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] > pArray[(i + Count) % Count].value[1])
 		{
-			NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]), pArray[(i + Count + 1) % Count].value[1]));
+			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			{
+				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
+				{
+					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
+					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
+					{
+						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+					}
+					else
+					{
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+					}
+				}
+			}
 		}
 		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线上面，一条(pArray[i+1])和扫描线重合
 		else if (pArray[(i + Count - 1) % Count].value[1] < pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] == pArray[(i + Count) % Count].value[1])
@@ -217,26 +261,83 @@ void Graphics::DrawTriangle(Point4* pArray)
 		{
 			//记录0个顶点
 		}
-		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线下面，一条(pArray[i+1])和扫描线重合
+		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线下面，一条(pArray[i+1])和扫描线重合，记录i-1
 		else if (pArray[(i + Count - 1) % Count].value[1] > pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] == pArray[(i + Count) % Count].value[1])
 		{
-			NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]), pArray[(i + Count - 1) % Count].value[1]));
+			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			{
+				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
+				{
+					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
+					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
+					{
+						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+					}
+					else
+					{
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
+					}
+				}
+			}
 		}
-		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])和扫描线重合，一条(pArray[i+1])在扫描线下面
+		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])和扫描线重合，一条(pArray[i+1])在扫描线下面,记录i+1
 		else if (pArray[(i + Count - 1) % Count].value[1] == pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] > pArray[(i + Count) % Count].value[1])
 		{
-			NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]), pArray[(i + Count + 1) % Count].value[1]));
+			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			{
+				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
+				{
+					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
+					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
+					{
+						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+					}
+					else
+					{
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+					}
+				}
+			}
 		}
 		//共享顶点pArray[(i+Count)%Count]的两条边都在扫描线上方
 		else if (pArray[(i + Count - 1) % Count].value[1] < pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] < pArray[(i + Count) % Count].value[1])
 		{
 			//记录0个顶点
 		}
-		//共享顶点pArray[(i+Count)%Count]的两条边都在扫描线下方
+		//共享顶点pArray[(i+Count)%Count]的两条边都在扫描线下方, 记录i-1和i+1
 		else if (pArray[(i + Count - 1) % Count].value[1] > pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] > pArray[(i + Count) % Count].value[1])
 		{
-			NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]), pArray[(i + Count - 1) % Count].value[1]));
-			NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]), pArray[(i + Count + 1) % Count].value[1]));
+			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			{
+				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
+				{
+					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
+					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
+					{
+						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+					}
+					else
+					{
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
+					}
+				}
+			}
+
+			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			{
+				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
+				{
+					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
+					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
+					{
+						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+					}
+					else
+					{
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+					}
+				}
+			}
 		}
 		//共享顶点pArray[(i+Count)%Count]的两条边都和扫描线重合
 		else if (pArray[(i + Count - 1) % Count].value[1] == pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] == pArray[(i + Count) % Count].value[1])
@@ -249,11 +350,11 @@ void Graphics::DrawTriangle(Point4* pArray)
 		}
 	}
 	double* interpolationAbo = new double[abo->NumOfvertex];//插值之后的ABO
-	for (int scanLine = Min; scanLine < Max; scanLine++)//开始绘制
+	for (int scanLine = Min; scanLine < min(Max,(int)Height); scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
 		AET.splice(it_end, NET[scanLine - Min]);
-		AET.sort([](EdgeTableItem const & E1, EdgeTableItem const &E2) {return E1.x < E2.x; });//排序
+		AET.sort([](EdgeTableItem const& E1, EdgeTableItem const& E2) {return E1.x < E2.x; });//排序
 		std::list<EdgeTableItem>::iterator s, e;
 		int CountPosite = 0;
 		for (std::list<EdgeTableItem>::iterator it = AET.begin(); it != AET.end();)
@@ -295,12 +396,12 @@ void Graphics::DrawTriangle(Point4* pArray)
 								{
 									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + abo->NumOfvertex] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + abo->NumOfvertex * 2] / pArray[2].value[3] * Weight[2]);
 								}
-								if (DepthBuffer[scanLine*Width + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
+								if (DepthBuffer[scanLine * Width + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
 								{
 									COLORREF c;
 									FragmentShader(interpolationAbo, c);//调用片元着色器
 									fast_putpixel(x, scanLine, c);//先用屏幕空间重心插值求出纹理(暂时不加透视校正) i 扫描线序号，j横坐标序号
-									DepthBuffer[scanLine*Width + x] = depth;//更新深度信息
+									DepthBuffer[scanLine * Width + x] = depth;//更新深度信息
 								}
 							}
 						}
@@ -317,12 +418,12 @@ void Graphics::DrawTriangle(Point4* pArray)
 	delete[] interpolationAbo;
 }
 
-void Graphics::setVBO(VBO *Vbo)
+void Graphics::setVBO(VBO* Vbo)
 {
 	vbo = Vbo;
 }
 
-void Graphics::setABO(ABO *Abo)
+void Graphics::setABO(ABO* Abo)
 {
 	if (TransmitAbo != NULL)
 	{
@@ -365,7 +466,7 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 	A12 = pArray[1].value[0] - pArray[2].value[0];
 	//-----------
 	int status = 0;//记录交换P0位置的状态
-	if (A11*A22 - A21 * A12 == 0)//如果P0 (x,y)直线和P1 P2直线平行，则改用(x,y) P2和P0 P1求交
+	if (A11 * A22 - A21 * A12 == 0)//如果P0 (x,y)直线和P1 P2直线平行，则改用(x,y) P2和P0 P1求交
 	{
 		status = 1;
 		A11 = pArray[0].value[1] - pArray[1].value[1];
@@ -373,7 +474,7 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 
 		A21 = pArray[2].value[1] - y;
 		A22 = x - pArray[2].value[0];
-		if (A11*A22 - A21 * A12 == 0)//交换之后如果再次平行则，则改用(x,y) P1和P0 P2求交
+		if (A11 * A22 - A21 * A12 == 0)//交换之后如果再次平行则，则改用(x,y) P1和P0 P2求交
 		{
 			status = 2;
 			A11 = pArray[2].value[1] - pArray[0].value[1];
@@ -388,8 +489,8 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 	B2 = pArray[0].value[1] * x - y * pArray[0].value[0];//得到P (x,y)直线方程(这个P就是指上面的和(x,y)连成直线的那个点)
 	B1 = pArray[2].value[1] * pArray[1].value[0] - pArray[1].value[1] * pArray[2].value[0];//得到Pa Pb直线方程(Pa Pb指另外两个点)
 
-	double X = (B1*A22 - A12 * B2) / (A11*A22 - A12 * A21);
-	double Y = (B2*A11 - A21 * B1) / (A11*A22 - A12 * A21);
+	double X = (B1 * A22 - A12 * B2) / (A11 * A22 - A12 * A21);
+	double Y = (B2 * A11 - A21 * B1) / (A11 * A22 - A12 * A21);
 
 	double W0, W1, W2, Wt;
 	/*
@@ -457,10 +558,10 @@ Graphics::~Graphics()
 	closegraph();          // 关闭绘图窗口
 }
 
-VBO::VBO(double * buffer, unsigned int count) :Count(count)
+VBO::VBO(double* buffer, unsigned int count) :Count(count)
 {
 	Buffer = new double[count * 3];
-	memcpy(Buffer, buffer, sizeof(double)*count * 3);
+	memcpy(Buffer, buffer, sizeof(double) * count * 3);
 }
 
 VBO::~VBO()
@@ -468,10 +569,10 @@ VBO::~VBO()
 	delete Buffer;
 }
 
-ABO::ABO(double * buffer, unsigned int numOfVertex, unsigned int count) :Count(count)
+ABO::ABO(double* buffer, unsigned int numOfVertex, unsigned int count) :Count(count)
 {
-	Buffer = new double[count* numOfVertex];
-	memcpy(Buffer, buffer, sizeof(double)*count* numOfVertex);
+	Buffer = new double[count * numOfVertex];
+	memcpy(Buffer, buffer, sizeof(double) * count * numOfVertex);
 	NumOfvertex = numOfVertex;
 }
 
