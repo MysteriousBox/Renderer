@@ -5,9 +5,9 @@
 #include <time.h>
 #pragma warning(disable:4996)
 Matrix4 mvpMatrix;
-Graphics *gp;
+Graphics* gp;
 //vs fs的定义在Graph的头文件有说明
-void vs(double const vbo[3],double* abo, Point4& Position)//顶点着色器
+void vs(double const vbo[3], double* abo, Point4& Position)//顶点着色器
 {
 
 	double src[4];
@@ -20,11 +20,11 @@ void vs(double const vbo[3],double* abo, Point4& Position)//顶点着色器
 }
 void fs(double* ABO, COLORREF& FragColor)//片元着色器
 {
-	FragColor=gp->texture2D(ABO[0], ABO[1]);//因为ABO被设置成每个顶点两个属性，一个是纹理x坐标，一个是纹理y坐标
+	FragColor = gp->texture2D(ABO[0], ABO[1]);//因为ABO被设置成每个顶点两个属性，一个是纹理x坐标，一个是纹理y坐标
 }
 int main()
 {
-	gp=new Graphics(320, 240);	//创建一个画布
+	gp = new Graphics(320, 240);	//创建一个画布
 	gp->enable_CW = true;//启用顺时针逆时针三角形剔除
 	gp->CW_CCW = false;//绘制逆时针三角形
 	gp->VertexShader = vs;
@@ -32,7 +32,7 @@ int main()
 
 	//顶点和纹理可以用3DSMAX生成，导出obj文本格式，这样就能得到顶点集合和纹理坐标集合了，当然有时间也可以写一个读取obj文件的代码，这样就不用在程序源码里面硬编码坐标和纹理了
 	//顶点
-	double Vertrix[] = 
+	double Vertrix[] =
 	{
 		-1,1,0,-1,-1,0,1,-1,0,-1,1,0,1,-1,0,1,1,0,/*前面6个顶点坐标*/
 		1,1,0,1,-1,0,1,-1,-2,1,1,0,1,-1,-2,1,1,-2,/*右面6个顶点坐标*/
@@ -42,7 +42,7 @@ int main()
 		-1,-1,0,-1,-1,-2,1,-1,-2,-1,-1,0,1,-1,-2,1,-1,0/*下面6个顶点坐标*/
 	};
 	//各个顶点的纹理
-	double textureCoordinate[] = 
+	double textureCoordinate[] =
 	{
 		0,1,0,0.75,0.25,0.75, 0,1,0.25,0.75,0.25,1,/*前面6个顶点纹理坐标*/
 		0.25,1,0.25,0.75,0.5,0.75, 0.25,1,0.5,0.75,0.5,1,/*右面6个顶点纹理坐标*/
@@ -66,7 +66,7 @@ int main()
 	double l, r, b, t, n, f;
 	double w = 5; //近平面的参照宽高
 	double proportion;//宽高比
-	if (gp->Width < gp->Height) 
+	if (gp->Width < gp->Height)
 	{ //宽度略小,以宽度为标准
 		proportion = gp->Height / gp->Width;
 		l = -w / 2;
@@ -76,7 +76,7 @@ int main()
 		n = w;
 		f = w * 50;
 	}
-	else 
+	else
 	{
 		proportion = gp->Width / gp->Height;
 		l = -w * proportion / 2;
@@ -93,21 +93,22 @@ int main()
 	char msg[256];
 	for (int i = 0;; i++)
 	{
+		i = i % 360;
 		clock_t oldclock = clock();
 		Matrix4 mMatrix = Matrix4::Rotate(axis, i);
 		Matrix::Mult(vpMatrix.Value[0], mMatrix.Value[0], 4, 4, 4, mvpMatrix.Value[0]);
-		gp->clearDepth();//清除深度缓冲区，将深度缓冲区值设置为一个非常小的值
-		gp->SwapS();
+		gp->clearDepth(0.0);//清除深度缓冲区，将深度缓冲区值设置为一个非常小的值
+		gp->SwapStart();
 		gp->clear();//清除屏幕
 		gp->Draw();//绘制
 		gp->flush();//等待同步
-		gp->SwapE();//绘制到屏幕
+		gp->SwapEnd();//绘制到屏幕
 		clock_t now = clock();
 		if (16 - (now - oldclock) > 0)//如果绘制小于16毫秒，则休眠一段时间补齐16毫秒
 		{
 			Sleep(16 - (now - oldclock));
 		}
-		sprintf(msg, "%ld\n", now - oldclock);
+		sprintf(msg, "本帧绘制耗时:%ld 毫秒\n", now - oldclock);
 		OutputDebugString(msg);//往调试器输出两帧绘制时间间隔
 		oldclock = now;
 	}

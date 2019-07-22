@@ -4,6 +4,7 @@
 #include <wingdi.h>
 #include <stdio.h>
 #include <io.h>
+#include <algorithm>
 #pragma warning(disable:4996)
 
 Graphics::Graphics(int w, int h) :Width(w), Height(h)
@@ -78,6 +79,12 @@ bool Graphics::loadBMP(const char * filename)
 		bmpwidth = ihead->biWidth;//保存位图宽高
 		bmpData = textureBuffer + fhead->bfOffBits;
 	}
+	else
+	{
+		isError = true;
+		sprintf_s(tmp, sizeof(tmp), "文件打开失败\n");
+		strcat_s(errmsg, sizeof(errmsg), tmp);
+	}
 	return isError;
 }
 
@@ -102,6 +109,44 @@ void Graphics::Draw()
 			parray[j].value[0] = (parray[j].value[0] + 1) / 2 * Width;//将ccv空间转换到屏幕空间
 			parray[j].value[1] = Height - (parray[j].value[1] + 1) / 2 * Height;
 		}
+		if ((parray[0].value[0] < 0 && parray[1].value[0] < 0 && parray[2].value[0] < 0)//三角形全部在屏幕左侧
+			|| (parray[0].value[0] >Width && parray[1].value[0] > Width && parray[2].value[0] > Width)//三角形全部在屏幕右侧
+			|| (parray[0].value[1] < 0 && parray[1].value[1] < 0 && parray[2].value[1] < 0)//三角形全部在屏幕上部
+			|| (parray[0].value[1] > Height && parray[1].value[1] > Height && parray[2].value[1] > Height)//三角形全部在屏幕下部
+			|| (parray[0].value[2] < -1 && parray[1].value[2] < -1 && parray[2].value[2] < -1)//三角形深度值全部小于-1
+			|| (parray[0].value[2] > 1 && parray[1].value[2] > 1 && parray[2].value[2] > 1))//三角形深度值全部超过1
+		{//以上这几种情况三角形不会有任意一个像素会投影到当前屏幕，所以可以不绘制
+			continue;
+		}
+		/*
+		判断三角形的面积和方向
+		*/
+		Vector3 a(parray[0].value[0] - parray[1].value[0], parray[0].value[1] - parray[1].value[1], 0);
+		Vector3 b(parray[0].value[0] - parray[2].value[0], parray[0].value[1] - parray[2].value[1], 0);
+		//a b向量叉乘向量的z>0则表示逆时针，反之顺时针，面积不为0肯定不等于0
+		//叉乘向量的模为0表示面积为0
+		Vector3 t = Vector3::CrossProduct(a, b);
+		if (t.Mod() == 0)
+		{
+			continue;
+		}
+		if (enable_CW)
+		{
+			if (!CW_CCW)//使用顺时针绘制
+			{
+				if (t.value[2] > 0)//实际确实逆时针
+				{
+					continue;
+				}
+			}
+			else//同上
+			{
+				if (t.value[2] < 0)
+				{
+					continue;
+				}
+			}
+		}
 		DrawTriangle(parray);
 	}
 }
@@ -111,17 +156,18 @@ void Graphics::clear()
 	cleardevice();
 }
 
-void Graphics::clearDepth()
+void Graphics::clearDepth(double v)
 {
-	memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
+	std::fill(DepthBuffer, DepthBuffer + (Width * Height), v);//有SSE优化
+	//memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
 }
 
-void Graphics::SwapS()
+void Graphics::SwapStart()
 {
 	BeginBatchDraw();
 }
 
-void Graphics::SwapE()
+void Graphics::SwapEnd()
 {
 	EndBatchDraw();
 }
@@ -149,36 +195,7 @@ COLORREF Graphics::texture2D(double x, double y)
 //本函数中插值计算都是采用double
 void Graphics::DrawTriangle(Point4* pArray)
 {
-	/*
-	判断三角形的面积和方向
-	*/
-	Vector3 a(pArray[0].value[0] - pArray[1].value[0], pArray[0].value[1] - pArray[1].value[1], 0);
-	Vector3 b(pArray[0].value[0] - pArray[2].value[0], pArray[0].value[1] - pArray[2].value[1], 0);
-	//a b向量叉乘向量的z>0则表示逆时针，反之顺时针，面积不为0肯定不等于0
-	//叉乘向量的模为0表示面积为0
-	Vector3 t = Vector3::CrossProduct(a, b);
-	if (t.Mod() == 0)
-	{
-		return;
-	}
-	if (enable_CW)
-	{
-		if (!CW_CCW)//顺时针
-		{
-			if (t.value[2] > 0)
-			{
-				return;
-			}
-		}
-		else
-		{
-			if (t.value[2] < 0)
-			{
-				return;
-			}
-		}
-	}
-	unsigned int Count = 3;
+	unsigned int Count = 3;//顶点数量
 	int Min = (int)pArray[0].value[1];
 	int Max = (int)pArray[0].value[1];
 	for (unsigned int i = 0; i < Count; i++)//记录扫描线最大最小值
