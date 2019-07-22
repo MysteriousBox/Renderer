@@ -84,6 +84,8 @@ void Graphics::SwapE()
 
 COLORREF Graphics::texture2D(double x, double y)
 {
+	x = x - floor(x);
+	y = y - floor(y);
 	SetWorkingImage(&img);//用于读取纹素
 	COLORREF c = getpixel((int)(x*TextureWidth), TextureHeight-(int)(y*TextureHeight));
 	SetWorkingImage(NULL);//恢复默认绘图设备
@@ -218,7 +220,8 @@ void Graphics::DrawTriangle(Point4* pArray)
 					e = it;
 					if (i >= 0 && i < (int)Height)//只绘制出现在屏幕范围之内的像素
 					{
-						for (unsigned int j = max((int)s->x,0); j < min(e->x,Width); j++)
+						//for (unsigned int j = max((int)s->x,0); j < min(e->x,Width); j++)
+						for (unsigned int j = max((int)s->x, 0); j < min(e->x, Width); j++)
 						{
 							if (j >= 0 && j < Width)
 							{
@@ -271,7 +274,13 @@ void Graphics::setABO(ABO *Abo)
 	TransmitAbo = new double[Abo->NumOfvertex*3];
 	abo = Abo;
 }
-
+/*
+重心坐标插值:假如有三个顶点P0,P1,P2和待插值点P,三角形面积为S,三角形P P1 P2的面积为S0(P0对边和P围成的三角形),P P0 P2面积为S1,P P0 P1面积为S2
+则三角形三个顶点对点P的权重W1,W2,W3计算为:
+W1=S1/S,W2=S2/S,W3=S3/S
+下面这个是我自己推算的，不知道是不是正确的:
+如果P P1 P2这个三角形和三角形P0,P1,P2有相交部分，面积取正，否则取负
+*/
 void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight[3])
 {
 	/*
@@ -286,30 +295,42 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 	 B=X1-X2
 	 -C=X1*Y2-X2*Y1
 	*/
-	for (int i=0;i<3;i++)
-	{
-		if (x == pArray[i].value[0] && y == pArray[0].value[1])
-		{
-			Weight[i] = 1;//和顶点重合，权重为1
-			return;
-		}
-	}
-	double A11 = pArray[2].value[1] - pArray[1].value[1];
-	double A12 = pArray[1].value[0] - pArray[2].value[0];
-	double B1 = pArray[2].value[1]*pArray[1].value[0] - pArray[1].value[1]*pArray[2].value[0];//得到P2 P1直线方程
-
-	double A21 = pArray[0].value[1] - y;
-	double A22 = x - pArray[0].value[0];
-	double B2 = pArray[0].value[1]*x - y * pArray[0].value[0];//得到P0 (x,y)直线方程
-
-	//除非三角形的两条边平行，否则有解,用克莱姆法则即可求出交点(X,Y)
-	if ((A11 * A22 - A12 * A21) == 0)//P0 (x,y)直线和P1 P2直线平行，无交点，权重取P0
+	double A11, A12, B1, A21, A22, B2;
+	A21 = pArray[0].value[1] - y;
+	A22 = x - pArray[0].value[0];
+	if (A21 == 0 && A22 == 0)//点(x,y)和P0重合
 	{
 		Weight[0] = 1;
-		Weight[1] = 0;
-		Weight[2] = 0;
-		return;
+		return;//如果(x,y)和P1或者P2重合是不影响计算的
 	}
+
+	A11 = pArray[2].value[1] - pArray[1].value[1];
+	A12 = pArray[1].value[0] - pArray[2].value[0];
+	//-----------
+	int status = 0;//记录交换P0位置的状态
+	if (A11*A22-A21*A12==0)//如果P0 (x,y)直线和P1 P2直线平行，则改用(x,y) P2和P0 P1求交
+	{
+		status = 1;
+		A11 = pArray[0].value[1] - pArray[1].value[1];
+		A12 = pArray[1].value[0] - pArray[0].value[0];
+
+		A21 = pArray[2].value[1] - y;
+		A22 = x - pArray[2].value[0];
+		if (A11*A22 - A21 * A12 == 0)//交换之后如果再次平行则，则改用(x,y) P1和P0 P2求交
+		{
+			status = 2;
+			A11 = pArray[2].value[1] - pArray[0].value[1];
+			A12 = pArray[0].value[0] - pArray[2].value[0];
+			
+
+			A21 = pArray[1].value[1] - y;
+			A22 = x - pArray[1].value[0];
+		}
+	}
+	//------------
+	B2 = pArray[0].value[1] * x - y * pArray[0].value[0];//得到P (x,y)直线方程(这个P就是指上面的和(x,y)连成直线的那个点)
+	B1 = pArray[2].value[1] * pArray[1].value[0] - pArray[1].value[1] * pArray[2].value[0];//得到Pa Pb直线方程(Pa Pb指另外两个点)
+
 	double X = (B1*A22 - A12 * B2) / (A11*A22 - A12 * A21);
 	double Y = (B2*A11 - A21 * B1) / (A11*A22 - A12 * A21);
 
@@ -340,6 +361,24 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 	Weight[0] = W0;
 	Weight[1] = W1 * Wt;
 	Weight[2] = W2 * Wt;
+	double tmp1,tmp2;
+	switch (status)//因为在上面交换了PO,P1,P2的位置，所以权重也要相应的交换位置
+	{
+		case 0:break;
+		case 1:
+			tmp1 = Weight[0];
+			Weight[0] = Weight[2];
+			Weight[2] = tmp1;
+			break;
+		case 2:
+			tmp1 = Weight[1];
+			tmp2 = Weight[2];
+			Weight[1] = Weight[0];
+			Weight[2] = tmp1;
+			Weight[0] = tmp2;
+			break;
+		default:break;
+	}
 }
 
 

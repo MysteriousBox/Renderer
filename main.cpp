@@ -88,7 +88,7 @@ int main()
 	Matrix4 vpMatrix;
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
 	char msg[256];
-	for (int i = 0;; i++)
+	for (int i = 0;;i++)
 	{
 		clock_t oldclock = clock();
 		Matrix4 mMatrix = Matrix4::Rotate(axis, i);
