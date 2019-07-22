@@ -56,6 +56,7 @@ int main()
 	gp->setABO(&a);
 	gp->setVBO(&v);
 	gp->LoadTexture("texture.png");
+	gp->loadBMP("texture.bmp");
 
 	/*坐标系是上面为Y正方向,右面为X正方向,屏幕向外为Z正方向*/
 	Vector3 eyePosition(0, 0, 3); //相机原点
@@ -90,7 +91,7 @@ int main()
 	Matrix4 vpMatrix;
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
 	char msg[256];
-	for (int i = 0;;i++)
+	for (int i = 0; i < 200; i++)
 	{
 		clock_t oldclock = clock();
 		Matrix4 mMatrix = Matrix4::Rotate(axis, i);
@@ -111,4 +112,5 @@ int main()
 		oldclock = now;
 	}
 	delete gp;
+	return 0;
 }

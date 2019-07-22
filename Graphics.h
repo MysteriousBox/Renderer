@@ -36,6 +36,7 @@ class Graphics
 {
 	/*坐标系是上面为Y正方向，右面为X正方向，屏幕向外为Z正方向*/
 public:
+	char errmsg[1024];//错误信息，如果执行出错则可以读取本信息
 	void (*VertexShader)(double const vbo[3],double *abo,Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
 	/*
 	Position对应了OpenGL的gl_Position，
@@ -60,6 +61,7 @@ public:
 	void fast_putpixel(int x, int y, COLORREF c);
 	COLORREF fast_getpixel(int x, int y);
 	void LoadTexture(const char* filename);//加载纹理
+	bool loadBMP(const char* filename);//加载bmp文件到纹理,返回false表示失败（只能加载24位，无压缩，纵轴正向BMP）
 	void flush();// 使针对绘图窗口的显存操作生效
 	void Draw();
 	void clear();
@@ -68,6 +70,9 @@ public:
 	void SwapE();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 	COLORREF texture2D(double x, double y);//读取纹理中的颜色
 private:
+	int bmpHeight, bmpwidth;//位图宽高
+	unsigned char* bmpData;//位图数据区
+	unsigned char* textureBuffer;//纹理缓冲区，保存bmp位图
 	IMAGE img;
 	double* TransmitAbo;//从顶点着色器传递到片元着色器的ABO
 	int TextureHeight, TextureWidth;//纹理宽高
