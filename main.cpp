@@ -29,6 +29,8 @@ int main()
 	gp->CW_CCW = false;//绘制逆时针三角形
 	gp->VertexShader = vs;
 	gp->FragmentShader = fs;
+
+	//顶点和纹理可以用3DSMAX生成，导出obj文本格式，这样就能得到顶点集合和纹理坐标集合了，当然有时间也可以写一个读取obj文件的代码，这样就不用在程序源码里面硬编码坐标和纹理了
 	//顶点
 	double Vertrix[] = 
 	{
