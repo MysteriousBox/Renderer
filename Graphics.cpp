@@ -249,16 +249,16 @@ void Graphics::DrawTriangle(Point4* pArray)
 		}
 	}
 	double* interpolationAbo = new double[abo->NumOfvertex];//插值之后的ABO
-	for (int i = Min; i < Max; i++)//开始绘制
+	for (int scanLine = Min; scanLine < Max; scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
-		AET.splice(it_end, NET[i - Min]);
+		AET.splice(it_end, NET[scanLine - Min]);
 		AET.sort([](EdgeTableItem const & E1, EdgeTableItem const &E2) {return E1.x < E2.x; });//排序
 		std::list<EdgeTableItem>::iterator s, e;
 		int CountPosite = 0;
 		for (std::list<EdgeTableItem>::iterator it = AET.begin(); it != AET.end();)
 		{
-			if ((int)it->Ymax <= i)
+			if ((int)it->Ymax <= scanLine)
 			{
 				it = AET.erase(it);//当前扫描线已经超过it这条边的Ymax,将it边删除
 			}
@@ -272,16 +272,19 @@ void Graphics::DrawTriangle(Point4* pArray)
 				else
 				{
 					e = it;
-					if (i >= 0 && i < (int)Height)//只绘制出现在屏幕范围之内的像素
+					if (scanLine >= 0 && scanLine < (int)Height)//只绘制出现在屏幕范围之内的像素
 					{
-						//for (unsigned int j = max((int)s->x,0); j < min(e->x,Width); j++)
-						for (unsigned int j = max((int)s->x, 0); j < min(e->x, Width); j++)
+						for (unsigned int x = max((int)s->x, 0); x < min(e->x, Width); x++)
 						{
-							if (j >= 0 && j < Width)
+							if (x >= 0 && x < Width)
 							{
 								double Weight[3] = { 0,0,0 };
-								Interpolation(pArray, j, i, Weight);//使用重心坐标插值计算出三个顶点对(j,i)的权重
+								Interpolation(pArray, x, scanLine, Weight);//使用重心坐标插值计算出三个顶点对(j,i)的权重
 								double depth = Weight[0] * pArray[0].value[2] + Weight[1] * pArray[1].value[2] + Weight[2] * pArray[2].value[2];//计算深度值，这个值虽然不是线性的，但是经过线性插值仍然能保证大的更大，小的更小
+								if (depth < -1.0 || depth>1.0)//如果深度超出[-1,1]区间则放弃当前像素
+								{
+									continue;
+								}
 								/*
 								 普通线性插值计算出(j,i)的值:v=Weight[0]*v1+Weight[1]*v2+Weight[2]*v3
 								 深度值Depth:D(j,i)=1/z=Weight[0]*(1/z1)+Weight[1]*(1/z2)+Weight[2]*(1/z3)
@@ -292,12 +295,12 @@ void Graphics::DrawTriangle(Point4* pArray)
 								{
 									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + abo->NumOfvertex] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + abo->NumOfvertex * 2] / pArray[2].value[3] * Weight[2]);
 								}
-								if (DepthBuffer[i*Width + j] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
+								if (DepthBuffer[scanLine*Width + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
 								{
 									COLORREF c;
 									FragmentShader(interpolationAbo, c);//调用片元着色器
-									fast_putpixel(j, i, c);//先用屏幕空间重心插值求出纹理(暂时不加透视校正) i 扫描线序号，j横坐标序号
-									DepthBuffer[i*Width + j] = depth;//更新深度信息
+									fast_putpixel(x, scanLine, c);//先用屏幕空间重心插值求出纹理(暂时不加透视校正) i 扫描线序号，j横坐标序号
+									DepthBuffer[scanLine*Width + x] = depth;//更新深度信息
 								}
 							}
 						}
