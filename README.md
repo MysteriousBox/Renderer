@@ -6,13 +6,10 @@
 使用vs直接添加*.cpp文件和*.h文件即可编译运行  
 软件直接运行可以得到如下的效果：
 
-![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Shader/master/result.gif)
-
-如果想要变得更大，只需要在main.cpp中将距离拉近即可，但是因为是逐像素绘制，所以当绘制图像像素变多时，速度会相应降低
-
-```CPP
-Vector3 eyePosition(0, 0, 10); //相机原点,将Z值变小可使得物体看起来更大
-```
+Tea.obj
+![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Shader/master/mod/Tea.gif)  
+woman.obj
+![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Shader/master/mod/woman.gif)  
 
 ---
 >主要实现的功能:
