@@ -104,11 +104,11 @@ int main()
 	gp->VertexShader = vs;//设置顶点着色器程序
 	gp->FragmentShader = fs;//设置片元着色器程序
 
-	loadOBJ("D:\\Users\\John\\Desktop\\Tea.obj",gp);//从文件加载模型
+	loadOBJ("Tea.obj",gp);//从文件加载模型
 	gp->LoadTexture("texture.png");
 	if (!gp->loadBMP("texture.bmp"))//加载BMP文件做纹理
 	{
-		OutputDebugString(gp->errmsg);//往调试器输出两帧绘制时间间隔
+		OutputDebugString(gp->errmsg);//往调试器输出错误信息
 		delete gp;
 		return -1;
 	}
