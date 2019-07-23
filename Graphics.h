@@ -22,8 +22,8 @@ class Graphics
 {
 	/*坐标系是上面为Y正方向，右面为X正方向，屏幕向外为Z正方向*/
 public:
-	char errmsg[1024] = {'0'};//错误信息，如果执行出错则可以读取本信息
-	void (*VertexShader)(double const vbo[3],double *abo,double *varying,Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
+	char errmsg[1024] = { '0' };//错误信息，如果执行出错则可以读取本信息
+	void (*VertexShader)(double const vbo[3], double* abo, double* varying, Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
 	/*
 	Position对应了OpenGL的gl_Position，
 	VBO来当前顶点的xyz，来自vbo，
@@ -41,8 +41,8 @@ public:
 	bool enable_CW = true;//是否启用顺时针逆时针三角形剔除
 	bool CW_CCW = false;//默认逆时针,true为顺时针
 	Graphics(int w, int h);
-	void setVBO(double *buffer,int count);
-	void setABO(double *buffer,int numOfvertex, int count);
+	void setVBO(double* buffer, int count);
+	void setABO(double* buffer, int numOfvertex, int count);
 	void Interpolation(Point4 parry[3], double x, double y, double Weight[3]);//使用屏幕坐标插值计算三角形各个顶点的权重并保存在Weight中
 	~Graphics();
 	void fast_putpixel(int x, int y, COLORREF c);
@@ -65,14 +65,14 @@ private:
 	double* TransmitAbo;//从顶点着色器传递到片元着色器的ABO
 	int TextureHeight, TextureWidth;//纹理宽高
 	void DrawTriangle(Point4* pointArray);//使用扫描线填充算法绘制三角形
-	DWORD *g_pBuf;//显存指针
+	DWORD* g_pBuf;//显存指针
 	double* DepthBuffer = NULL;//深度缓冲区
-	double *vboBuffer=NULL;//vob
-	int vboCount=0;//顶点数量
-	double *aboBuffer = NULL;//abo
-	int NumOfVertexABO=0;//每个顶点的属性数量
-	int aboCount=0;//abo数量
-	double* Varying=NULL;//当前的Varying变量，经过插值之后会传递给片元着色器
+	double* vboBuffer = NULL;//vob
+	int vboCount = 0;//顶点数量
+	double* aboBuffer = NULL;//abo
+	int NumOfVertexABO = 0;//每个顶点的属性数量
+	int aboCount = 0;//abo数量
+	double* Varying = NULL;//当前的Varying变量，经过插值之后会传递给片元着色器
 	int CountOfVarying = 0;//Varying变量数量
 };
 #endif // !_GRAPHICSM

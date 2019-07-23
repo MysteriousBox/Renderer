@@ -99,7 +99,7 @@ bool Graphics::Draw()
 		memcpy(TransmitAbo, aboBuffer + i * 3 * NumOfVertexABO, NumOfVertexABO * sizeof(double) * 3);//将当前三角形三个顶点abo属性复制到TransmitAbo
 		for (int j = 0; j < 3; j++)
 		{
-			VertexShader(vboBuffer + (i * 9 + j * 3), TransmitAbo+j* NumOfVertexABO, Varying+j*CountOfVarying, parray[j]);//对每个顶点调用顶点着色器
+			VertexShader(vboBuffer + (i * 9 + j * 3), TransmitAbo + j * NumOfVertexABO, Varying + j * CountOfVarying, parray[j]);//对每个顶点调用顶点着色器
 			parray[j].value[0] = parray[j].value[0] / parray[j].value[3];//X,Y,Z按照齐次坐标规则正确还原，W暂时不还原，后面插值不用1/Z，改为用1/W插值
 			parray[j].value[1] = parray[j].value[1] / parray[j].value[3];
 			parray[j].value[2] = parray[j].value[2] / parray[j].value[3];//经过矩阵计算,W变成了原始点的-Z值
@@ -175,7 +175,7 @@ void Graphics::setVaryingCount(int count)
 		delete[] Varying;
 	}
 	CountOfVarying = count;
-	Varying = new double[count*3];
+	Varying = new double[count * 3];
 }
 
 COLORREF Graphics::texture2D(double x, double y)
@@ -191,7 +191,7 @@ COLORREF Graphics::texture2D(double x, double y)
 	}
 	else
 	{
-		return RGB(255,255,255);
+		return RGB(255, 255, 255);
 	}
 }
 
@@ -217,9 +217,9 @@ void Graphics::DrawTriangle(Point4* pArray)
 		return;
 	}
 	Min = max(0, Min);//记录扫描线最小值
-	Max = min(Max,(int)Height);//记录扫描线最大值
+	Max = min(Max, (int)Height);//记录扫描线最大值
 	std::list<EdgeTableItem> AET;//活性边表
-	std::list<EdgeTableItem>* NET = new std::list<EdgeTableItem>[Max-Min+1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
+	std::list<EdgeTableItem>* NET = new std::list<EdgeTableItem>[Max - Min + 1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
 	for (unsigned int i = 0; i < Count; i++)//对每个顶点进行扫描并添加到NET中
 	{
 		//Y增大方向指向屏幕下面,按照Y方向增大新增至NET和AET
@@ -361,7 +361,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 	}
 	double* interpolationAbo = new double[NumOfVertexABO];//插值之后的ABO
 	double* interpolationVarying = new double[CountOfVarying];//插值之后的varying
-	for (int scanLine = Min; scanLine < min(Max,(int)Height); scanLine++)//开始绘制
+	for (int scanLine = Min; scanLine < min(Max, (int)Height); scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
 		AET.splice(it_end, NET[scanLine - Min]);
@@ -433,18 +433,18 @@ void Graphics::DrawTriangle(Point4* pArray)
 	delete[] interpolationAbo;
 }
 
-void Graphics::setVBO(double *buffer, int count)
+void Graphics::setVBO(double* buffer, int count)
 {
 	if (vboBuffer != NULL)
 	{
 		delete[] vboBuffer;
 	}
 	vboBuffer = new double[sizeof(double) * 3 * count];
-	memcpy(vboBuffer,buffer,sizeof(double)*3*count);
+	memcpy(vboBuffer, buffer, sizeof(double) * 3 * count);
 	vboCount = count;
 }
 
-void Graphics::setABO(double *buffer, int numOfvertex, int count)
+void Graphics::setABO(double* buffer, int numOfvertex, int count)
 {
 	if (TransmitAbo != NULL)
 	{

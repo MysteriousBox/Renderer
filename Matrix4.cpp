@@ -16,7 +16,7 @@ Matrix4::Matrix4()
 
 }
 
-Matrix4 Matrix4::QuickInverse(Matrix4 & src)
+Matrix4 Matrix4::QuickInverse(Matrix4& src)
 {
 	Matrix4 dest;
 	double a = src.Value[0][0];
@@ -101,7 +101,7 @@ Matrix4 Matrix4::PerspectiveProjection(double l, double r, double b, double t, d
 	return Matrix4(tmp);
 }
 
-Matrix4 Matrix4::LookAt(Vector3 & eye, Vector3 & up, Vector3 & dest)
+Matrix4 Matrix4::LookAt(Vector3& eye, Vector3& up, Vector3& dest)
 {
 	up.Normalize();
 
@@ -149,7 +149,7 @@ Matrix4 Matrix4::LookAt(Vector3 & eye, Vector3 & up, Vector3 & dest)
 	return Matrix4(reuslt);
 }
 
-Matrix4 Matrix4::Rotate(Vector3 & vec, double angle)
+Matrix4 Matrix4::Rotate(Vector3& vec, double angle)
 {
 	double radian = angle * PI / 180; //转为弧度制
 	double u = vec.value[0];

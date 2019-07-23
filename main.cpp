@@ -10,7 +10,7 @@
 #include <math.h>
 #pragma warning(disable:4996)
 //从obj文件读取顶点数据和纹理坐标，暂时不考虑法线
-bool loadOBJ(const char* filename, Graphics *gps)
+bool loadOBJ(const char* filename, Graphics* gps)
 {
 	std::vector<double> vbo;
 	std::vector<double> abo;
@@ -70,7 +70,7 @@ bool loadOBJ(const char* filename, Graphics *gps)
 
 				for (int i = 0; i < 3; i++)
 				{
-					if (sscanf(ss[i], "%d/%d/%d", index, index + 1, index + 2)!=3)
+					if (sscanf(ss[i], "%d/%d/%d", index, index + 1, index + 2) != 3)
 					{
 						fin.close();
 						return false;
@@ -101,7 +101,7 @@ Graphics* gp;
 Matrix4 invModMatrix;//mod矩阵的逆矩阵(inverseMatrix)
 Vector4 invLight;//光线的逆向量
 //vs fs的定义在Graph的头文件有说明
-void vs(double const vbo[3], double* ABO,double* varying, Point4& Position)//顶点着色器
+void vs(double const vbo[3], double* ABO, double* varying, Point4& Position)//顶点着色器
 {
 
 	double src[4];
@@ -124,7 +124,7 @@ void fs(double* ABO, double* varying, COLORREF& FragColor)//片元着色器
 		diffuse = 1.0;
 	}
 	FragColor = gp->texture2D(ABO[0], ABO[1]);//因为ABO被设置成每个顶点两个属性，一个是纹理x坐标，一个是纹理y坐标
-	FragColor = RGB(diffuse*GetRValue(FragColor), diffuse*GetGValue(FragColor), diffuse* GetBValue(FragColor));
+	FragColor = RGB(diffuse * GetRValue(FragColor), diffuse * GetGValue(FragColor), diffuse * GetBValue(FragColor));
 }
 int main()
 {
@@ -167,7 +167,7 @@ int main()
 	}*/
 
 	/*坐标系是上面为Y正方向,右面为X正方向,屏幕向外为Z正方向*/
-	
+
 	Vector3 up(0, 1, 0); //相机上方向
 	Vector3 destination(0, 0, -10000); //相机看向的点
 	Matrix4 vMatrix = Matrix4::LookAt(eyePosition, up, destination);
@@ -227,7 +227,7 @@ int main()
 		{
 			Sleep(16 - (now - oldclock));
 		}
-		sprintf(msg, "第%d帧:本帧绘制耗时:%ld 毫秒\n", i,now - oldclock);
+		sprintf(msg, "第%d帧:本帧绘制耗时:%ld 毫秒\n", i, now - oldclock);
 		OutputDebugString(msg);//往调试器输出两帧绘制时间间隔
 		oldclock = now;
 	}

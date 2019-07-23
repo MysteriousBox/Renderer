@@ -6,7 +6,7 @@ Vector4::Vector4()
 {
 }
 
-double Vector4::dot(Vector4 & a, Vector4 & b)
+double Vector4::dot(Vector4& a, Vector4& b)
 {
 	double result = 0.0;
 	for (int i = 0; i < 4; i++)
@@ -16,7 +16,7 @@ double Vector4::dot(Vector4 & a, Vector4 & b)
 	return result;
 }
 
-double Vector4::dot(Vector4 & a, Vector3 & b)
+double Vector4::dot(Vector4& a, Vector3& b)
 {
 	double result = 0.0;
 	for (int i = 0; i < 3; i++)
@@ -26,7 +26,7 @@ double Vector4::dot(Vector4 & a, Vector3 & b)
 	return result;
 }
 
-double Vector4::dot(Vector3 & a, Vector4 & b)
+double Vector4::dot(Vector3& a, Vector4& b)
 {
 	double result = 0.0;
 	for (int i = 0; i < 3; i++)
@@ -55,7 +55,7 @@ void Vector4::Normalize()
 
 double Vector4::Mod()
 {
-	return sqrt(value[0]*value[0] + value[1] * value[1] + value[2] * value[2] + value[3] * value[3]);
+	return sqrt(value[0] * value[0] + value[1] * value[1] + value[2] * value[2] + value[3] * value[3]);
 }
 
 Vector4::~Vector4()
