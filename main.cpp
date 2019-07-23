@@ -1,9 +1,83 @@
 ﻿#include <graphics.h>      // 引用图形库头文件
 #include <conio.h>
-#include "Graphics.h"
 #include <stdio.h>
 #include <time.h>
+#include "Graphics.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 #pragma warning(disable:4996)
+//从obj文件读取顶点数据和纹理坐标，暂时不考虑法线
+void loadOBJ(const char* filename, Graphics *gps)
+{
+	std::vector<double> vbo;
+	std::vector<double> abo;
+	int vboCount = 0;
+	struct Postion//只想在函数内部使用这个Position，所以定义在函数内部
+	{
+		double x;
+		double y;
+		double z;
+	};
+	struct Coordinate
+	{
+		double x;
+		double y;
+	};
+	std::vector<Postion> ps;//顶点集合
+	std::vector<Coordinate> TextureCoordinate;//纹理坐标
+	Postion p;
+	Coordinate t;
+	char line[1024];
+	std::ifstream fin(filename, std::ios::in);
+	if (fin.is_open())
+	{
+		while (fin.getline(line, sizeof(line)))
+		{
+			char s1[512];
+			char ss[3][512];
+			std::stringstream sin(line);
+			sin >> s1;
+			if (strcmp("v", s1) == 0)
+			{
+				sin >> p.x >> p.y >> p.z;
+				ps.push_back(p);
+			}
+			else if (strcmp("vt", s1) == 0)
+			{
+				sin >> t.x >> t.y;
+				TextureCoordinate.push_back(t);
+			}
+			else if (strcmp("f", s1) == 0)
+			{
+				sin >> ss[0] >> ss[1] >> ss[2];
+				int index[3];
+
+				for (int i = 0; i < 3; i++)
+				{
+					sscanf(ss[i], "%d/%d/%d", index, index + 1, index + 2);
+					vbo.push_back(ps[index[0] - 1].x);
+					vbo.push_back(ps[index[0] - 1].y);
+					vbo.push_back(ps[index[0] - 1].z);//添加了当前三角形第一个顶点的坐标
+					abo.push_back(TextureCoordinate[index[1] - 1].x);
+					abo.push_back(TextureCoordinate[index[1] - 1].y);//添加了当前三角形第一个顶点的纹理坐标
+					vboCount++;
+				}
+			}
+			else
+			{
+				std::cout << s1 << std::endl;
+			}
+		}
+		fin.close();
+	}
+	gps->setVBO(&vbo[0], vboCount);
+	gps->setABO(&abo[0], 2, vboCount);
+}
+
+
+
 Matrix4 mvpMatrix;
 Graphics* gp;
 //vs fs的定义在Graph的头文件有说明
@@ -24,37 +98,39 @@ void fs(double* ABO, COLORREF& FragColor)//片元着色器
 }
 int main()
 {
-	gp = new Graphics(320, 240);	//创建一个画布
+	gp = new Graphics(640, 480);	//创建一个画布
 	gp->enable_CW = true;//启用顺时针逆时针三角形剔除
 	gp->CW_CCW = false;//绘制逆时针三角形
-	gp->VertexShader = vs;
-	gp->FragmentShader = fs;
+	gp->VertexShader = vs;//设置顶点着色器程序
+	gp->FragmentShader = fs;//设置片元着色器程序
 
-	//顶点和纹理可以用3DSMAX生成，导出obj文本格式，这样就能得到顶点集合和纹理坐标集合了，当然有时间也可以写一个读取obj文件的代码，这样就不用在程序源码里面硬编码坐标和纹理了
-	//顶点
-	double Vertrix[] =
-	{
-		-1,1,0,-1,-1,0,1,-1,0,-1,1,0,1,-1,0,1,1,0,/*前面6个顶点坐标*/
-		1,1,0,1,-1,0,1,-1,-2,1,1,0,1,-1,-2,1,1,-2,/*右面6个顶点坐标*/
-		1,1,-2,1,-1,-2,-1,-1,-2,1,1,-2,-1,-1,-2,-1,1,-2,/*后面6个顶点坐标*/
-		-1,1,-2,-1,-1,-2,-1,-1,0,-1,1,-2,-1,-1,0,-1,1,0,/*左面6个顶点坐标*/
-		-1,1,-2,-1,1,0,1,1,0,-1,1,-2,1,1,0,1,1,-2,/*上面6个顶点坐标*/
-		-1,-1,0,-1,-1,-2,1,-1,-2,-1,-1,0,1,-1,-2,1,-1,0/*下面6个顶点坐标*/
-	};
-	//各个顶点的纹理
-	double textureCoordinate[] =
-	{
-		0,1,0,0.75,0.25,0.75, 0,1,0.25,0.75,0.25,1,/*前面6个顶点纹理坐标*/
-		0.25,1,0.25,0.75,0.5,0.75, 0.25,1,0.5,0.75,0.5,1,/*右面6个顶点纹理坐标*/
-		0.5,1,0.5,0.75,0.75,0.75,  0.5,1,0.75,0.75,0.75,1,/*后面6个顶点纹理坐标*/
-		0.75,1,0.75,0.75,1,0.75, 0.75,1,1,0.75,1,1,/*左面6个顶点纹理坐标*/
-		0,0.75,0,0.5,0.25,0.5,0,0.75,0.25,0.5,0.25,0.75,/*上面6个顶点纹理坐标*/
-		0.25,0.75,0.25,0.5,0.5,0.5, 0.25,0.75,0.5,0.5,0.5,0.75/*下面6个顶点纹理坐标*/
-	};
-	VBO v(Vertrix, 36);
-	ABO a(textureCoordinate, 2, 36);
-	gp->setABO(&a);
-	gp->setVBO(&v);
+	loadOBJ("D:\\Users\\John\\Desktop\\Tea.obj",gp);//从文件加载模型
+
+	////顶点和纹理可以用3DSMAX生成，导出obj文本格式，这样就能得到顶点集合和纹理坐标集合了，当然有时间也可以写一个读取obj文件的代码，这样就不用在程序源码里面硬编码坐标和纹理了
+	////顶点
+	//double Vertrix[] =
+	//{
+	//	-1,1,0,-1,-1,0,1,-1,0,-1,1,0,1,-1,0,1,1,0,/*前面6个顶点坐标*/
+	//	1,1,0,1,-1,0,1,-1,-2,1,1,0,1,-1,-2,1,1,-2,/*右面6个顶点坐标*/
+	//	1,1,-2,1,-1,-2,-1,-1,-2,1,1,-2,-1,-1,-2,-1,1,-2,/*后面6个顶点坐标*/
+	//	-1,1,-2,-1,-1,-2,-1,-1,0,-1,1,-2,-1,-1,0,-1,1,0,/*左面6个顶点坐标*/
+	//	-1,1,-2,-1,1,0,1,1,0,-1,1,-2,1,1,0,1,1,-2,/*上面6个顶点坐标*/
+	//	-1,-1,0,-1,-1,-2,1,-1,-2,-1,-1,0,1,-1,-2,1,-1,0/*下面6个顶点坐标*/
+	//};
+	////各个顶点的纹理
+	//double textureCoordinate[] =
+	//{
+	//	0,1,0,0.75,0.25,0.75, 0,1,0.25,0.75,0.25,1,/*前面6个顶点纹理坐标*/
+	//	0.25,1,0.25,0.75,0.5,0.75, 0.25,1,0.5,0.75,0.5,1,/*右面6个顶点纹理坐标*/
+	//	0.5,1,0.5,0.75,0.75,0.75,  0.5,1,0.75,0.75,0.75,1,/*后面6个顶点纹理坐标*/
+	//	0.75,1,0.75,0.75,1,0.75, 0.75,1,1,0.75,1,1,/*左面6个顶点纹理坐标*/
+	//	0,0.75,0,0.5,0.25,0.5,0,0.75,0.25,0.5,0.25,0.75,/*上面6个顶点纹理坐标*/
+	//	0.25,0.75,0.25,0.5,0.5,0.5, 0.25,0.75,0.5,0.5,0.5,0.75/*下面6个顶点纹理坐标*/
+	//};
+	//gp->setVBO(Vertrix, 36);
+	//gp->setABO(textureCoordinate, 2, 36);
+
+
 	gp->LoadTexture("texture.png");
 	gp->loadBMP("texture.bmp");
 
@@ -108,7 +184,7 @@ int main()
 		{
 			Sleep(16 - (now - oldclock));
 		}
-		sprintf(msg, "本帧绘制耗时:%ld 毫秒\n", now - oldclock);
+		sprintf(msg, "%d:本帧绘制耗时:%ld 毫秒\n", i,now - oldclock);
 		OutputDebugString(msg);//往调试器输出两帧绘制时间间隔
 		oldclock = now;
 	}

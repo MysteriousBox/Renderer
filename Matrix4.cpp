@@ -109,7 +109,7 @@ Matrix4 Matrix4::Rotate(Vector3 & vec, double angle)
 	double cosine = cos(radian);
 	double sine = sin(radian);
 	double result[4][4] = {
-		{(u * u + (v * v + w * w) * cosine) / s, (u * v * (1 - cosine) - w * sq * sine) / s, (u * w * (1 - cosine) + v * sq * sine) / s, 0},
+			{(u * u + (v * v + w * w) * cosine) / s, (u * v * (1 - cosine) - w * sq * sine) / s, (u * w * (1 - cosine) + v * sq * sine) / s, 0},
 			{(u * v * (1 - cosine) + w * sq * sine) / s, (v * v + (u * u + w * w) * cosine) / s, (v * w * (1 - cosine) - u * sq * sine) / s, 0},
 			{(u * w * (1 - cosine) - v * sq * sine) / s, (v * w * (1 - cosine) + u * sq * sine) / s, (w * w + (u * u + v * v) * cosine) / s, 0},
 			{0, 0, 0, 1}

@@ -18,8 +18,8 @@ Graphics::Graphics(int w, int h) :Width(w), Height(h)
 	TextureHeight = 0;
 	TextureWidth = 0;
 	TransmitAbo = NULL;
-	abo = NULL;
-	vbo = NULL;
+	aboBuffer = NULL;
+	vboBuffer = NULL;
 }
 // 快速画点函数,复制于官网教程https://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
 void Graphics::fast_putpixel(int x, int y, COLORREF c)
@@ -96,12 +96,12 @@ void Graphics::flush()
 void Graphics::Draw()
 {
 	Point4 parray[3];//position Array
-	for (unsigned int i = 0; i < vbo->Count / 3; i++)//i表示三角形数量
+	for (int i = 0; i < vboCount / 3; i++)//i表示三角形数量
 	{
-		memcpy(TransmitAbo, abo->Buffer + i * 3 * abo->NumOfvertex, abo->NumOfvertex * sizeof(double) * 3);//将当前三角形三个顶点abo属性复制到TransmitAbo
+		memcpy(TransmitAbo, aboBuffer + i * 3 * NumOfVertex, NumOfVertex * sizeof(double) * 3);//将当前三角形三个顶点abo属性复制到TransmitAbo
 		for (int j = 0; j < 3; j++)
 		{
-			VertexShader(vbo->Buffer + (i * 9 + j * 3), TransmitAbo, parray[j]);//对每个顶点调用顶点着色器
+			VertexShader(vboBuffer + (i * 9 + j * 3), TransmitAbo, parray[j]);//对每个顶点调用顶点着色器
 			parray[j].value[0] = parray[j].value[0] / parray[j].value[3];//X,Y,Z按照齐次坐标规则正确还原，W暂时不还原，后面插值不用1/Z，改为用1/W插值
 			parray[j].value[1] = parray[j].value[1] / parray[j].value[3];
 			parray[j].value[2] = parray[j].value[2] / parray[j].value[3];//经过矩阵计算,W变成了原始点的-Z值
@@ -109,7 +109,7 @@ void Graphics::Draw()
 			parray[j].value[0] = (parray[j].value[0] + 1) / 2 * Width;//将ccv空间转换到屏幕空间
 			parray[j].value[1] = Height - (parray[j].value[1] + 1) / 2 * Height;
 		}
-		//经过反复考虑，不需要对X,Y做相交检查，因为实际上在扫描线填充的时候会自动忽略掉这些点
+		//经过反复考虑，不需要对X,Y做扫描线范围判断，因为实际上在扫描线填充的时候会自动忽略掉这些点
 		if ((parray[0].value[2] < -1 && parray[1].value[2] < -1 && parray[2].value[2] < -1)//三角形深度值全部小于-1
 			|| (parray[0].value[2] > 1 && parray[1].value[2] > 1 && parray[2].value[2] > 1))//三角形深度值全部超过1
 		{//以上这几种情况三角形不会有任意一个像素会投影到当前屏幕，所以可以不绘制
@@ -205,6 +205,10 @@ void Graphics::DrawTriangle(Point4* pArray)
 		{
 			Min = (int)pArray[i].value[1];
 		}
+	}
+	if (Max < 0 || Min >= Height)//三角形不在扫描线范围之内，直接忽略
+	{
+		return;
 	}
 	Min = max(0, Min);//记录扫描线最小值
 	Max = min(Max,(int)Height);//记录扫描线最大值
@@ -349,7 +353,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 			fprintf(stderr, "error");
 		}
 	}
-	double* interpolationAbo = new double[abo->NumOfvertex];//插值之后的ABO
+	double* interpolationAbo = new double[NumOfVertex];//插值之后的ABO
 	for (int scanLine = Min; scanLine < min(Max,(int)Height); scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
@@ -392,9 +396,9 @@ void Graphics::DrawTriangle(Point4* pArray)
 								 根据透视校正的原理(j,i)的值:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
 								*/
 								double originDepth = 1 / (Weight[0] * (1 / pArray[0].value[3]) + Weight[1] * (1 / pArray[1].value[3]) + Weight[2] * (1 / pArray[2].value[3]));//这个值是原始深度
-								for (unsigned int index = 0; index < abo->NumOfvertex; index++)//对每个abo插值
+								for (int index = 0; index < NumOfVertex; index++)//对每个abo插值
 								{
-									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + abo->NumOfvertex] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + abo->NumOfvertex * 2] / pArray[2].value[3] * Weight[2]);
+									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + NumOfVertex] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + NumOfVertex * 2] / pArray[2].value[3] * Weight[2]);
 								}
 								if (DepthBuffer[scanLine * Width + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
 								{
@@ -418,19 +422,33 @@ void Graphics::DrawTriangle(Point4* pArray)
 	delete[] interpolationAbo;
 }
 
-void Graphics::setVBO(VBO* Vbo)
+void Graphics::setVBO(double *buffer, int count)
 {
-	vbo = Vbo;
+	if (vboBuffer != NULL)
+	{
+		delete[] vboBuffer;
+	}
+	vboBuffer = new double[sizeof(double) * 3 * count];
+	memcpy(vboBuffer,buffer,sizeof(double)*3*count);
+	vboCount = count;
 }
 
-void Graphics::setABO(ABO* Abo)
+void Graphics::setABO(double *buffer, int numOfvertex, int count)
 {
 	if (TransmitAbo != NULL)
 	{
-		delete TransmitAbo;
+		delete[] TransmitAbo;
 	}
-	TransmitAbo = new double[Abo->NumOfvertex * 3];
-	abo = Abo;
+	TransmitAbo = new double[numOfvertex * 3];
+
+	if (aboBuffer != NULL)
+	{
+		delete[] aboBuffer;
+	}
+	aboBuffer = new double[sizeof(double) * numOfvertex * count];
+	memcpy(aboBuffer, buffer, sizeof(double) * numOfvertex * count);
+	NumOfVertex = numOfvertex;
+	aboCount = count;
 }
 /*
 重心坐标插值:假如有三个顶点P0,P1,P2和待插值点P,三角形面积为S,三角形P P1 P2的面积为S0(P0对边和P围成的三角形),P P0 P2面积为S1,P P0 P1面积为S2
@@ -555,28 +573,13 @@ Graphics::~Graphics()
 	{
 		delete textureBuffer;
 	}
+	if (vboBuffer != NULL)
+	{
+		delete vboBuffer;
+	}
+	if (aboBuffer != NULL)
+	{
+		delete aboBuffer;
+	}
 	closegraph();          // 关闭绘图窗口
-}
-
-VBO::VBO(double* buffer, unsigned int count) :Count(count)
-{
-	Buffer = new double[count * 3];
-	memcpy(Buffer, buffer, sizeof(double) * count * 3);
-}
-
-VBO::~VBO()
-{
-	delete Buffer;
-}
-
-ABO::ABO(double* buffer, unsigned int numOfVertex, unsigned int count) :Count(count)
-{
-	Buffer = new double[count * numOfVertex];
-	memcpy(Buffer, buffer, sizeof(double) * count * numOfVertex);
-	NumOfvertex = numOfVertex;
-}
-
-ABO::~ABO()
-{
-	delete Buffer;
 }

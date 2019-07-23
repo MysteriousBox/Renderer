@@ -1,28 +1,10 @@
-﻿#ifndef _Graphics
-#define _Graphics
+﻿#ifndef _GRAPHICSM
+#define _GRAPHICSM
 #include <graphics.h>      // 引用图形库头文件
 #include "Point2.h"
 #include "Point4.h"
 #include "EdgeTableItem.h"
 #include "Matrix4.h"
-class VBO//vertex buffer object
-{
-public:
-	double *Buffer;//数据必须按照x1,y1,z1,x2,y2,z2.......这样的顺序存放
-	unsigned int Count = 0;
-	VBO(double* buffer, unsigned int count);//顶点个数
-	~VBO();
-};
-class ABO//Attribute buffer object(double)
-{
-public:
-	double *Buffer;
-	unsigned int Count = 0;
-	unsigned int NumOfvertex = 0;//单个顶点数据量
-	ABO(double* buffer, unsigned int numOfvertex, unsigned int count);//将数据复制到指定位置,NumOfvertex每个顶点的数据量，count顶点个数
-	~ABO();
-};
-
 /*
 不支持ddy和ddy，所以没有Mipmap，因为实现起来比较麻烦
 ddy和ddy是指在屏幕空间上求vbo的偏导数
@@ -54,8 +36,8 @@ public:
 	bool CW_CCW = false;//默认逆时针,true为顺时针
 	unsigned int Width, Height;//绘图设备宽高
 	Graphics(int w, int h);
-	void setVBO(VBO* vbo);
-	void setABO(ABO* Abo);
+	void setVBO(double *buffer,int count);
+	void setABO(double *buffer,int numOfvertex, int count);
 	void Interpolation(Point4 parry[3], double x, double y, double Weight[3]);//使用屏幕坐标插值计算三角形各个顶点的权重并保存在Weight中
 	~Graphics();
 	void fast_putpixel(int x, int y, COLORREF c);
@@ -79,8 +61,11 @@ private:
 	int TextureHeight, TextureWidth;//纹理宽高
 	void DrawTriangle(Point4* pointArray);//使用扫描线填充算法绘制三角形
 	DWORD *g_pBuf;//显存指针
-	VBO *vbo;
-	ABO *abo;
 	double* DepthBuffer = NULL;//深度缓冲区
+	double *vboBuffer=NULL;//vob
+	int vboCount=0;//顶点数量
+	double *aboBuffer = NULL;//abo
+	int NumOfVertex=0;//每个顶点的属性数量
+	int aboCount=0;//abo数量
 };
-#endif // !_GRAPHICS
+#endif // !_GRAPHICSM

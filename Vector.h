@@ -1,5 +1,5 @@
-﻿#ifndef  _Vector
-#define _Vector
+﻿#ifndef  _MYVector
+#define _MYVector
 class Vector
 {
 public:
@@ -8,5 +8,5 @@ public:
 	virtual void Normalize() = 0;//单位化
 	virtual ~Vector();
 };
-#endif // ! _Vector
+#endif // ! _MYVector
 
