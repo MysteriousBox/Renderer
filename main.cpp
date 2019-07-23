@@ -80,15 +80,11 @@ bool loadOBJ(const char* filename, Graphics *gps)
 					vbo.push_back(ps[index[0] - 1].z);//添加了当前三角形第i个顶点的坐标
 					abo.push_back(TextureCoordinate[index[1] - 1].x);
 					abo.push_back(TextureCoordinate[index[1] - 1].y);//添加了当前三角形第i个顶点的纹理坐标
-					abo.push_back(normals[index[1] - 1].x);
-					abo.push_back(normals[index[1] - 1].y);
-					abo.push_back(normals[index[1] - 1].z);//添加了当前三角形第i个顶点的法向量
+					abo.push_back(normals[index[2] - 1].x);
+					abo.push_back(normals[index[2] - 1].y);
+					abo.push_back(normals[index[2] - 1].z);//添加了当前三角形第i个顶点的法向量
 					vboCount++;
 				}
-			}
-			else
-			{
-				std::cout << s1 << std::endl;
 			}
 		}
 		fin.close();
@@ -102,7 +98,6 @@ bool loadOBJ(const char* filename, Graphics *gps)
 
 Matrix4 mvpMatrix;
 Graphics* gp;
-Vector3 lightvec(-0.5, 0.5, 0.5);//光线向量
 Matrix4 invModMatrix;//mod矩阵的逆矩阵(inverseMatrix)
 Vector4 invLight;//光线的逆向量
 //vs fs的定义在Graph的头文件有说明
@@ -119,7 +114,7 @@ void vs(double const vbo[3], double* ABO,double* varying, Point4& Position)//顶
 void fs(double* ABO, double* varying, COLORREF& FragColor)//片元着色器
 {
 	Vector3 nor(ABO[2], ABO[3], ABO[4]);
-	double diffuse = Vector4::dot(nor, invLight);
+	double diffuse = Vector4::dot(nor, invLight);//根据光向量和法线夹角计算光照强度
 	if (diffuse < 0.1)
 	{
 		diffuse = 0.1;
@@ -141,23 +136,38 @@ int main()
 	gp->FragmentShader = fs;//设置片元着色器程序
 	gp->setVaryingCount(1);//需要从顶点着色器传递2个参数到片元着色器
 
-	if (!loadOBJ("Tea.obj", gp))//从文件加载模型
+	Vector3 eyePosition(0, 0, 8); //相机原点
+	if (!loadOBJ("mod/Tea.obj", gp))//从文件加载模型
 	{
 		sprintf(msg, "加载obj文件失败\n");
 		OutputDebugString(gp->errmsg);//往调试器输出错误信息
 		delete gp;
 		return -1;
 	}
-	gp->LoadTexture("texture.png");
-	if (!gp->loadBMP("texture.bmp"))//加载BMP文件做纹理
+	if (!gp->loadBMP("mod/Tea.bmp"))//加载BMP文件做纹理
 	{
 		OutputDebugString(gp->errmsg);//往调试器输出错误信息
 		delete gp;
 		return -1;
 	}
+	/*
+	Vector3 eyePosition(0, 0, 6); //相机原点
+	if (!loadOBJ("mod/woman.obj", gp))//从文件加载模型
+	{
+		sprintf(msg, "加载obj文件失败\n");
+		OutputDebugString(gp->errmsg);//往调试器输出错误信息
+		delete gp;
+		return -1;
+	}
+	if (!gp->loadBMP("mod/woman.bmp"))//加载BMP文件做纹理
+	{
+		OutputDebugString(gp->errmsg);//往调试器输出错误信息
+		delete gp;
+		return -1;
+	}*/
 
 	/*坐标系是上面为Y正方向,右面为X正方向,屏幕向外为Z正方向*/
-	Vector3 eyePosition(0, 0, 8); //相机原点
+	
 	Vector3 up(0, 1, 0); //相机上方向
 	Vector3 destination(0, 0, -10000); //相机看向的点
 	Matrix4 vMatrix = Matrix4::LookAt(eyePosition, up, destination);
@@ -185,7 +195,7 @@ int main()
 		f = w * 50;
 	}
 	Matrix4 pMatrix = Matrix4::PerspectiveProjection(l, r, b, t, n, f);
-	Vector3 axis(1, 1, 1);//旋转轴
+	Vector3 axis(0, 1, 0);//旋转轴
 	Matrix4 vpMatrix;
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
 
@@ -196,6 +206,7 @@ int main()
 		Matrix4 mMatrix = Matrix4::Rotate(axis, i);
 		invModMatrix = Matrix4::QuickInverse(mMatrix);//求出模型矩阵的逆矩阵
 
+		Vector3 lightvec(0.5, 0.5, 0.5);//光线向量
 		double src[4];
 		src[0] = lightvec.value[0];
 		src[1] = lightvec.value[1];

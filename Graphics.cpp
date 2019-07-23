@@ -34,14 +34,6 @@ COLORREF Graphics::fast_getpixel(int x, int y)
 	return BGR(c);
 }
 
-void Graphics::LoadTexture(const char* filename)
-{
-
-	loadimage(&img, _T(filename));
-	TextureHeight = img.getheight();
-	TextureWidth = img.getwidth();
-}
-
 bool Graphics::loadBMP(const char* filename)
 {
 	errmsg[0] = '\0';//清空错误信息
@@ -82,7 +74,7 @@ bool Graphics::loadBMP(const char* filename)
 	else
 	{
 		isError = true;
-		sprintf_s(tmp, sizeof(tmp), "文件打开失败\n");
+		sprintf_s(tmp, sizeof(tmp), "纹理文件打开失败\n");
 		strcat_s(errmsg, sizeof(errmsg), tmp);
 	}
 	return !isError;
@@ -93,8 +85,14 @@ void Graphics::flush()
 	FlushBatchDraw();
 }
 
-void Graphics::Draw()
+bool Graphics::Draw()
 {
+	errmsg[0] = '\0';//清空错误信息
+	if (aboCount < vboCount)
+	{
+		sprintf_s(errmsg, sizeof(errmsg), "abo顶点数量小于vbo顶点数量，无法绘制\n");
+		return false;
+	}
 	Point4 parray[3];//position Array
 	for (int i = 0; i < vboCount / 3; i++)//i表示三角形数量
 	{
@@ -146,6 +144,7 @@ void Graphics::Draw()
 		}
 		DrawTriangle(parray);
 	}
+	return true;
 }
 
 void Graphics::clear()
@@ -192,10 +191,7 @@ COLORREF Graphics::texture2D(double x, double y)
 	}
 	else
 	{
-		SetWorkingImage(&img);//用于读取纹素
-		COLORREF c = getpixel((int)(x * TextureWidth), TextureHeight - (int)(y * TextureHeight));
-		SetWorkingImage(NULL);//恢复默认绘图设备
-		return c;
+		return RGB(255,255,255);
 	}
 }
 
@@ -578,23 +574,23 @@ Graphics::~Graphics()
 {
 	if (DepthBuffer != NULL)
 	{
-		delete DepthBuffer;
+		delete[] DepthBuffer;
 	}
 	if (TransmitAbo != NULL)
 	{
-		delete TransmitAbo;
+		delete[] TransmitAbo;
 	}
 	if (textureBuffer != NULL)
 	{
-		delete textureBuffer;
+		delete[] textureBuffer;
 	}
 	if (vboBuffer != NULL)
 	{
-		delete vboBuffer;
+		delete[] vboBuffer;
 	}
 	if (aboBuffer != NULL)
 	{
-		delete aboBuffer;
+		delete[] aboBuffer;
 	}
 	if (Varying != NULL)
 	{

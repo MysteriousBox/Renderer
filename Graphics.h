@@ -13,6 +13,10 @@ ddy和ddy是指在屏幕空间上求vbo的偏导数
 设前面三个点p(即不包含点(x+1,y+1))的纹理坐标分别为(u1,v1),(u2,v2),(u3,v3)
 则点p1上的ddx(u)=(u2-u1)/1,ddy(u)=(u3-u1)/1,这个计算值可以用来计算Mipmap
 同时现在主流游戏引擎上面的法线贴图都是用MikktSpace计算切线空间，也需要求偏导数，但是对我们现在的这个渲染器来说，这些可以暂时不考虑
+
+返回bool的函数表示有成功或者失败的问题，如果执行失败，可以通过errmsg读取，任何返回bool的函数在进入的时候都会清空errmsg，所以一旦出现问题，请立马读取errmsg
+
+坐标系是上面为Y正方向,右面为X正方向,屏幕向外为Z正方向
 */
 class Graphics
 {
@@ -36,7 +40,6 @@ public:
 	*/
 	bool enable_CW = true;//是否启用顺时针逆时针三角形剔除
 	bool CW_CCW = false;//默认逆时针,true为顺时针
-	unsigned int Width, Height;//绘图设备宽高
 	Graphics(int w, int h);
 	void setVBO(double *buffer,int count);
 	void setABO(double *buffer,int numOfvertex, int count);
@@ -44,22 +47,21 @@ public:
 	~Graphics();
 	void fast_putpixel(int x, int y, COLORREF c);
 	COLORREF fast_getpixel(int x, int y);
-	void LoadTexture(const char* filename);//加载纹理
 	bool loadBMP(const char* filename);//加载bmp文件到纹理,返回false表示失败（只能加载24位，无压缩，纵轴正向BMP）
 	void flush();// 使针对绘图窗口的显存操作生效
-	void Draw();
+	bool Draw();//返回false表示绘制失败
 	void clear();
 	void clearDepth(double v);//清理深度缓冲区,注意这里是使用memset来填充的，所以假如c=0x01，对应像素的深度值是一个dobule类型8字节,则实际上会被填充成0x0101010101010101
 	void SwapStart();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 	void SwapEnd();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 	void setVaryingCount(int count);//设置Varying变量的数量，如果有使用Varying，则一定要调用本函数
 	COLORREF texture2D(double x, double y);//读取纹理中的颜色
+	unsigned int Width, Height;//绘图设备宽高
 private:
 	int bmpHeight = 0;
 	int bmpwidth = 0;//位图宽高
 	unsigned char* bmpData = NULL;//位图数据区
 	unsigned char* textureBuffer = NULL;//纹理缓冲区，保存bmp位图
-	IMAGE img;
 	double* TransmitAbo;//从顶点着色器传递到片元着色器的ABO
 	int TextureHeight, TextureWidth;//纹理宽高
 	void DrawTriangle(Point4* pointArray);//使用扫描线填充算法绘制三角形
