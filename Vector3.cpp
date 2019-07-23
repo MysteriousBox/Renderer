@@ -23,6 +23,16 @@ Vector3::Vector3(Vector2& s, double z)
 	value[2] = (z);
 }
 
+double Vector3::dot(Vector3 & a, Vector3 & b)
+{
+	double result = 0.0;
+	for (int i = 0; i < 3; i++)
+	{
+		result += a.value[i] * b.value[i];
+	}
+	return result;
+}
+
 void Vector3::Normalize()
 {
 	double mod = Mod();

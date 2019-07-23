@@ -98,10 +98,10 @@ void Graphics::Draw()
 	Point4 parray[3];//position Array
 	for (int i = 0; i < vboCount / 3; i++)//i表示三角形数量
 	{
-		memcpy(TransmitAbo, aboBuffer + i * 3 * NumOfVertex, NumOfVertex * sizeof(double) * 3);//将当前三角形三个顶点abo属性复制到TransmitAbo
+		memcpy(TransmitAbo, aboBuffer + i * 3 * NumOfVertexABO, NumOfVertexABO * sizeof(double) * 3);//将当前三角形三个顶点abo属性复制到TransmitAbo
 		for (int j = 0; j < 3; j++)
 		{
-			VertexShader(vboBuffer + (i * 9 + j * 3), TransmitAbo, parray[j]);//对每个顶点调用顶点着色器
+			VertexShader(vboBuffer + (i * 9 + j * 3), TransmitAbo+j* NumOfVertexABO, Varying+j*CountOfVarying, parray[j]);//对每个顶点调用顶点着色器
 			parray[j].value[0] = parray[j].value[0] / parray[j].value[3];//X,Y,Z按照齐次坐标规则正确还原，W暂时不还原，后面插值不用1/Z，改为用1/W插值
 			parray[j].value[1] = parray[j].value[1] / parray[j].value[3];
 			parray[j].value[2] = parray[j].value[2] / parray[j].value[3];//经过矩阵计算,W变成了原始点的-Z值
@@ -167,6 +167,16 @@ void Graphics::SwapStart()
 void Graphics::SwapEnd()
 {
 	EndBatchDraw();
+}
+
+void Graphics::setVaryingCount(int count)
+{
+	if (Varying != NULL)
+	{
+		delete[] Varying;
+	}
+	CountOfVarying = count;
+	Varying = new double[count*3];
 }
 
 COLORREF Graphics::texture2D(double x, double y)
@@ -353,7 +363,8 @@ void Graphics::DrawTriangle(Point4* pArray)
 			fprintf(stderr, "error");
 		}
 	}
-	double* interpolationAbo = new double[NumOfVertex];//插值之后的ABO
+	double* interpolationAbo = new double[NumOfVertexABO];//插值之后的ABO
+	double* interpolationVarying = new double[CountOfVarying];//插值之后的varying
 	for (int scanLine = Min; scanLine < min(Max,(int)Height); scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
@@ -396,14 +407,18 @@ void Graphics::DrawTriangle(Point4* pArray)
 								 根据透视校正的原理(j,i)的值:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
 								*/
 								double originDepth = 1 / (Weight[0] * (1 / pArray[0].value[3]) + Weight[1] * (1 / pArray[1].value[3]) + Weight[2] * (1 / pArray[2].value[3]));//这个值是原始深度
-								for (int index = 0; index < NumOfVertex; index++)//对每个abo插值
+								for (int index = 0; index < NumOfVertexABO; index++)//对每个abo插值
 								{
-									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + NumOfVertex] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + NumOfVertex * 2] / pArray[2].value[3] * Weight[2]);
+									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + NumOfVertexABO] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + NumOfVertexABO * 2] / pArray[2].value[3] * Weight[2]);
+								}
+								for (int index = 0; index < CountOfVarying; index++)//对每个Varying插值
+								{
+									interpolationVarying[index] = originDepth * (Varying[index] / pArray[0].value[3] * Weight[0] + Varying[index + CountOfVarying] / pArray[1].value[3] * Weight[1] + Varying[index + CountOfVarying * 2] / pArray[2].value[3] * Weight[2]);
 								}
 								if (DepthBuffer[scanLine * Width + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
 								{
 									COLORREF c;
-									FragmentShader(interpolationAbo, c);//调用片元着色器
+									FragmentShader(interpolationAbo, interpolationVarying, c);//调用片元着色器
 									fast_putpixel(x, scanLine, c);//先用屏幕空间重心插值求出纹理(暂时不加透视校正) i 扫描线序号，j横坐标序号
 									DepthBuffer[scanLine * Width + x] = depth;//更新深度信息
 								}
@@ -447,7 +462,7 @@ void Graphics::setABO(double *buffer, int numOfvertex, int count)
 	}
 	aboBuffer = new double[sizeof(double) * numOfvertex * count];
 	memcpy(aboBuffer, buffer, sizeof(double) * numOfvertex * count);
-	NumOfVertex = numOfvertex;
+	NumOfVertexABO = numOfvertex;
 	aboCount = count;
 }
 /*
@@ -580,6 +595,10 @@ Graphics::~Graphics()
 	if (aboBuffer != NULL)
 	{
 		delete aboBuffer;
+	}
+	if (Varying != NULL)
+	{
+		delete[] Varying;
 	}
 	closegraph();          // 关闭绘图窗口
 }

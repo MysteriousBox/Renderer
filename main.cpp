@@ -7,9 +7,10 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <math.h>
 #pragma warning(disable:4996)
 //从obj文件读取顶点数据和纹理坐标，暂时不考虑法线
-void loadOBJ(const char* filename, Graphics *gps)
+bool loadOBJ(const char* filename, Graphics *gps)
 {
 	std::vector<double> vbo;
 	std::vector<double> abo;
@@ -20,15 +21,23 @@ void loadOBJ(const char* filename, Graphics *gps)
 		double y;
 		double z;
 	};
-	struct Coordinate
+	struct Coordinate//纹理坐标
 	{
 		double x;
 		double y;
 	};
+	struct normal//法向量
+	{
+		double x;
+		double y;
+		double z;
+	};
 	std::vector<Postion> ps;//顶点集合
-	std::vector<Coordinate> TextureCoordinate;//纹理坐标
+	std::vector<Coordinate> TextureCoordinate;//纹理坐标集合
+	std::vector<normal> normals;//纹理坐标集合
 	Postion p;
 	Coordinate t;
+	normal n;
 	char line[1024];
 	std::ifstream fin(filename, std::ios::in);
 	if (fin.is_open())
@@ -49,6 +58,11 @@ void loadOBJ(const char* filename, Graphics *gps)
 				sin >> t.x >> t.y;
 				TextureCoordinate.push_back(t);
 			}
+			else if (strcmp("vn", s1) == 0)
+			{
+				sin >> n.x >> n.y >> n.z;
+				normals.push_back(n);
+			}
 			else if (strcmp("f", s1) == 0)
 			{
 				sin >> ss[0] >> ss[1] >> ss[2];
@@ -56,12 +70,19 @@ void loadOBJ(const char* filename, Graphics *gps)
 
 				for (int i = 0; i < 3; i++)
 				{
-					sscanf(ss[i], "%d/%d/%d", index, index + 1, index + 2);
+					if (sscanf(ss[i], "%d/%d/%d", index, index + 1, index + 2)!=3)
+					{
+						fin.close();
+						return false;
+					}
 					vbo.push_back(ps[index[0] - 1].x);
 					vbo.push_back(ps[index[0] - 1].y);
-					vbo.push_back(ps[index[0] - 1].z);//添加了当前三角形第一个顶点的坐标
+					vbo.push_back(ps[index[0] - 1].z);//添加了当前三角形第i个顶点的坐标
 					abo.push_back(TextureCoordinate[index[1] - 1].x);
-					abo.push_back(TextureCoordinate[index[1] - 1].y);//添加了当前三角形第一个顶点的纹理坐标
+					abo.push_back(TextureCoordinate[index[1] - 1].y);//添加了当前三角形第i个顶点的纹理坐标
+					abo.push_back(normals[index[1] - 1].x);
+					abo.push_back(normals[index[1] - 1].y);
+					abo.push_back(normals[index[1] - 1].z);//添加了当前三角形第i个顶点的法向量
 					vboCount++;
 				}
 			}
@@ -73,15 +94,19 @@ void loadOBJ(const char* filename, Graphics *gps)
 		fin.close();
 	}
 	gps->setVBO(&vbo[0], vboCount);
-	gps->setABO(&abo[0], 2, vboCount);
+	gps->setABO(&abo[0], 5, vboCount);//每个顶点有五个属性，分别是Tx,Ty,Nx,Ny,Nz;T表示纹理，N表示法向量
+	return true;
 }
 
 
 
 Matrix4 mvpMatrix;
 Graphics* gp;
+Vector3 lightvec(-0.5, 0.5, 0.5);//光线向量
+Matrix4 invModMatrix;//mod矩阵的逆矩阵(inverseMatrix)
+Vector4 invLight;//光线的逆向量
 //vs fs的定义在Graph的头文件有说明
-void vs(double const vbo[3], double* abo, Point4& Position)//顶点着色器
+void vs(double const vbo[3], double* ABO,double* varying, Point4& Position)//顶点着色器
 {
 
 	double src[4];
@@ -89,22 +114,40 @@ void vs(double const vbo[3], double* abo, Point4& Position)//顶点着色器
 	src[1] = vbo[1];
 	src[2] = vbo[2];
 	src[3] = 1;
-
 	Matrix::Mult(mvpMatrix.Value[0], src, 4, 1, 4, Position.value);//计算顶点坐标
 }
-void fs(double* ABO, COLORREF& FragColor)//片元着色器
+void fs(double* ABO, double* varying, COLORREF& FragColor)//片元着色器
 {
+	Vector3 nor(ABO[2], ABO[3], ABO[4]);
+	double diffuse = Vector4::dot(nor, invLight);
+	if (diffuse < 0.1)
+	{
+		diffuse = 0.1;
+	}
+	else if (diffuse > 1.0)
+	{
+		diffuse = 1.0;
+	}
 	FragColor = gp->texture2D(ABO[0], ABO[1]);//因为ABO被设置成每个顶点两个属性，一个是纹理x坐标，一个是纹理y坐标
+	FragColor = RGB(diffuse*GetRValue(FragColor), diffuse*GetGValue(FragColor), diffuse* GetBValue(FragColor));
 }
 int main()
 {
+	char msg[256];//往调试器打印信息用的缓冲区
 	gp = new Graphics(320, 240);	//创建一个画布
 	gp->enable_CW = true;//启用顺时针逆时针三角形剔除
 	gp->CW_CCW = false;//绘制逆时针三角形
 	gp->VertexShader = vs;//设置顶点着色器程序
 	gp->FragmentShader = fs;//设置片元着色器程序
+	gp->setVaryingCount(1);//需要从顶点着色器传递2个参数到片元着色器
 
-	loadOBJ("Tea.obj",gp);//从文件加载模型
+	if (!loadOBJ("Tea.obj", gp))//从文件加载模型
+	{
+		sprintf(msg, "加载obj文件失败\n");
+		OutputDebugString(gp->errmsg);//往调试器输出错误信息
+		delete gp;
+		return -1;
+	}
 	gp->LoadTexture("texture.png");
 	if (!gp->loadBMP("texture.bmp"))//加载BMP文件做纹理
 	{
@@ -145,12 +188,22 @@ int main()
 	Vector3 axis(1, 1, 1);//旋转轴
 	Matrix4 vpMatrix;
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
-	char msg[256];//往调试器打印信息用的缓冲区
+
 	for (int i = 0;; i++)
 	{
 		i = i % 360;
 		clock_t oldclock = clock();
 		Matrix4 mMatrix = Matrix4::Rotate(axis, i);
+		invModMatrix = Matrix4::QuickInverse(mMatrix);//求出模型矩阵的逆矩阵
+
+		double src[4];
+		src[0] = lightvec.value[0];
+		src[1] = lightvec.value[1];
+		src[2] = lightvec.value[2];
+		src[3] = 0;//向量的w分量为0
+		Matrix::Mult(invModMatrix.Value[0], src, 4, 1, 4, invLight.value);//计算光线的逆向量(即模型不动，光线动)
+		invLight.Normalize();
+
 		Matrix::Mult(vpMatrix.Value[0], mMatrix.Value[0], 4, 4, 4, mvpMatrix.Value[0]);
 		gp->clearDepth(0.0);//清除深度缓冲区，将深度缓冲区值设置为一个非常小的值
 		gp->SwapStart();

@@ -19,17 +19,19 @@ class Graphics
 	/*坐标系是上面为Y正方向，右面为X正方向，屏幕向外为Z正方向*/
 public:
 	char errmsg[1024] = {'0'};//错误信息，如果执行出错则可以读取本信息
-	void (*VertexShader)(double const vbo[3],double *abo,Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
+	void (*VertexShader)(double const vbo[3],double *abo,double *varying,Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
 	/*
 	Position对应了OpenGL的gl_Position，
 	VBO来当前顶点的xyz，来自vbo，
 	abo来当前顶点的abo，来自abo
+	varying表示需要通过顶点着色器传递给片元着色器的变量，会在顶点处插值被传递给片元着色器
 	本程序需要计算并设置当abo和Position
 	*/
-	void (*FragmentShader)(double* ABO, COLORREF& FragColor);//片源，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
+	void (*FragmentShader)(double* ABO, double* varying, COLORREF& FragColor);//片源，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
 	/*
 	FragColor对应于OpenGL的gl_FragColor，只是没有了透明度，只有RGB
 	ABO在经过1/w插值之后会传递给片元着色器
+	顶点着色器中的Varying经过1/w插值之后传递给片元着色器
 	本程序需要计算并设置当abo和Position
 	*/
 	bool enable_CW = true;//是否启用顺时针逆时针三角形剔除
@@ -50,6 +52,7 @@ public:
 	void clearDepth(double v);//清理深度缓冲区,注意这里是使用memset来填充的，所以假如c=0x01，对应像素的深度值是一个dobule类型8字节,则实际上会被填充成0x0101010101010101
 	void SwapStart();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 	void SwapEnd();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
+	void setVaryingCount(int count);//设置Varying变量的数量，如果有使用Varying，则一定要调用本函数
 	COLORREF texture2D(double x, double y);//读取纹理中的颜色
 private:
 	int bmpHeight = 0;
@@ -65,7 +68,9 @@ private:
 	double *vboBuffer=NULL;//vob
 	int vboCount=0;//顶点数量
 	double *aboBuffer = NULL;//abo
-	int NumOfVertex=0;//每个顶点的属性数量
+	int NumOfVertexABO=0;//每个顶点的属性数量
 	int aboCount=0;//abo数量
+	double* Varying=NULL;//当前的Varying变量，经过插值之后会传递给片元着色器
+	int CountOfVarying = 0;//Varying变量数量
 };
 #endif // !_GRAPHICSM

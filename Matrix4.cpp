@@ -16,6 +16,57 @@ Matrix4::Matrix4()
 
 }
 
+Matrix4 Matrix4::QuickInverse(Matrix4 & src)
+{
+	Matrix4 dest;
+	double a = src.Value[0][0];
+	double b = src.Value[1][0];
+	double c = src.Value[2][0];
+	double d = src.Value[3][0];
+	double e = src.Value[0][1];
+	double f = src.Value[1][1];
+	double g = src.Value[2][1];
+	double h = src.Value[3][1];
+	double i = src.Value[0][2];
+	double j = src.Value[1][2];
+	double k = src.Value[2][2];
+	double l = src.Value[3][2];
+	double m = src.Value[0][3];
+	double n = src.Value[1][3];
+	double o = src.Value[2][3];
+	double p = src.Value[3][3];
+	double q = a * f - b * e;
+	double r = a * g - c * e;
+	double s = a * h - d * e;
+	double t = b * g - c * f;
+	double u = b * h - d * f;
+	double v = c * h - d * g;
+	double w = i * n - j * m;
+	double x = i * o - k * m;
+	double y = i * p - l * m;
+	double z = j * o - k * n;
+	double A = j * p - l * n;
+	double B = k * p - l * o;
+	double ivd = 1 / (q * B - r * A + s * z + t * y - u * x + v * w);
+	dest.Value[0][0] = (f * B - g * A + h * z) * ivd;
+	dest.Value[1][0] = (-b * B + c * A - d * z) * ivd;
+	dest.Value[2][0] = (n * v - o * u + p * t) * ivd;
+	dest.Value[3][0] = (-j * v + k * u - l * t) * ivd;
+	dest.Value[0][1] = (-e * B + g * y - h * x) * ivd;
+	dest.Value[1][1] = (a * B - c * y + d * x) * ivd;
+	dest.Value[2][1] = (-m * v + o * s - p * r) * ivd;
+	dest.Value[3][1] = (i * v - k * s + l * r) * ivd;
+	dest.Value[0][2] = (e * A - f * y + h * w) * ivd;
+	dest.Value[1][2] = (-a * A + b * y - d * w) * ivd;
+	dest.Value[2][2] = (m * u - n * s + p * q) * ivd;
+	dest.Value[3][2] = (-i * u + j * s - l * q) * ivd;
+	dest.Value[0][3] = (-e * z + f * x - g * w) * ivd;
+	dest.Value[1][3] = (a * z - b * x + c * w) * ivd;
+	dest.Value[2][3] = (-m * t + n * r - o * q) * ivd;
+	dest.Value[3][3] = (i * t - j * r + k * q) * ivd;
+	return dest;
+}
+
 
 //透视投影矩阵
 /**

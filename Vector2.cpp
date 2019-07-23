@@ -7,6 +7,16 @@ Vector2::Vector2(double x, double y)
 	value[1] = y;
 }
 
+double Vector2::dot(Vector2 & a, Vector2 & b)
+{
+	double result = 0.0;
+	for (int i = 0; i < 2; i++)
+	{
+		result += a.value[i] * b.value[i];
+	}
+	return result;
+}
+
 Vector2::~Vector2()
 {
 }
