@@ -85,7 +85,7 @@ bool Graphics::loadBMP(const char* filename)
 		sprintf_s(tmp, sizeof(tmp), "文件打开失败\n");
 		strcat_s(errmsg, sizeof(errmsg), tmp);
 	}
-	return isError;
+	return !isError;
 }
 
 void Graphics::flush()
@@ -206,7 +206,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 			Min = (int)pArray[i].value[1];
 		}
 	}
-	if (Max < 0 || Min >= Height)//三角形不在扫描线范围之内，直接忽略
+	if (Max < 0 || Min >= (int)Height)//三角形不在扫描线范围之内，直接忽略
 	{
 		return;
 	}
@@ -358,7 +358,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
 		AET.splice(it_end, NET[scanLine - Min]);
-		AET.sort([](EdgeTableItem const& E1, EdgeTableItem const& E2) {return E1.x < E2.x; });//排序
+		AET.sort([](EdgeTableItem const& E1, EdgeTableItem const& E2) {return E1.x < E2.x; });//将活性边表排序，按X增序排序
 		std::list<EdgeTableItem>::iterator s, e;
 		int CountPosite = 0;
 		for (std::list<EdgeTableItem>::iterator it = AET.begin(); it != AET.end();)
