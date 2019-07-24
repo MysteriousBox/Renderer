@@ -10,10 +10,44 @@
 	//因为我知道三角形肯定不会相交，而且我绘制的都是三角形，所以才定义了这个宏，如果使用本函数绘制其他多边形，比如五边形，六边形等，如果运行两条边相交，则应当取消_EdgeNotCross宏，即 #undef _EdgeNotCross
 #define _EdgeNotCross
 
-Graphics::Graphics(int w, int h) :Width(w), Height(h)
+bool Graphics::setViewPort(int x, int y, int w, int h)
 {
+	if (x < 0 || y < 0)
+	{
+		sprintf_s(errmsg,sizeof(errmsg),"视口起始坐标小于0");
+		return false;
+	}
+	if (w < 0 || h < 0)
+	{
+		sprintf_s(errmsg, sizeof(errmsg), "视口宽高小于0");
+		return false;
+	}
+	if (w < 0 || h < 0)
+	{
+		sprintf_s(errmsg, sizeof(errmsg), "视口宽高小于0");
+		return false;
+	}
+	if ((x + w) > (int)ScreenWidth || (y + h) > (int)ScreenHeight)
+	{
+		sprintf_s(errmsg, sizeof(errmsg), "视口设置范围超过屏幕范围");
+		return false;
+	}
+	if (DepthBuffer != NULL)
+	{
+		delete[] DepthBuffer;
+	}
 	DepthBuffer = new double[w * h];
-	initgraph(w, h);   // 创建绘图窗口，大小为 640x480 像素
+	viewPortX = x;
+	viewPortY = y;
+	viewPortWidth = w;
+	viewPortHeight = h;
+	return true;
+}
+
+Graphics::Graphics(unsigned int w,unsigned int h) :ScreenWidth(w), ScreenHeight(h)
+{
+	setViewPort(0,0,w,h);
+	initgraph(w, h);
 	setfillcolor(RED);
 	g_pBuf = GetImageBuffer(NULL);
 	FragmentShader = NULL;
@@ -27,13 +61,13 @@ Graphics::Graphics(int w, int h) :Width(w), Height(h)
 // 快速画点函数,复制于官网教程https://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
 void Graphics::fast_putpixel(int x, int y, COLORREF c)
 {
-	g_pBuf[y * Width + x] = BGR(c);
+	g_pBuf[y * ScreenWidth + x] = BGR(c);
 }
 
 // 快速读点函数,复制于官网教程https://codeabc.cn/yangw/post/the-principle-of-quick-drawing-points
 COLORREF Graphics::fast_getpixel(int x, int y)
 {
-	COLORREF c = g_pBuf[y * Width + x];
+	COLORREF c = g_pBuf[y * ScreenWidth + x];
 	return BGR(c);
 }
 
@@ -107,8 +141,8 @@ bool Graphics::Draw()
 			parray[j].value[1] = parray[j].value[1] / parray[j].value[3];
 			parray[j].value[2] = parray[j].value[2] / parray[j].value[3];//经过矩阵计算,W变成了原始点的-Z值
 
-			parray[j].value[0] = (parray[j].value[0] + 1) / 2 * Width;//将ccv空间转换到屏幕空间
-			parray[j].value[1] = Height - (parray[j].value[1] + 1) / 2 * Height;
+			parray[j].value[0] = (parray[j].value[0] + 1) / 2 * viewPortWidth;//将ccv空间转换到视口空间
+			parray[j].value[1] = viewPortHeight - (parray[j].value[1] + 1) / 2 * viewPortHeight;//在viewPort上下颠倒
 		}
 		//经过反复考虑，不需要对X,Y做扫描线范围判断，因为实际上在扫描线填充的时候会自动忽略掉这些点
 		if ((parray[0].value[2] < -1 && parray[1].value[2] < -1 && parray[2].value[2] < -1)//三角形深度值全部小于-1
@@ -157,7 +191,7 @@ void Graphics::clear()
 
 void Graphics::clearDepth(double v)
 {
-	std::fill(DepthBuffer, DepthBuffer + (Width * Height), v);//有SSE优化
+	std::fill(DepthBuffer, DepthBuffer + (viewPortWidth * viewPortHeight), v);//有SSE优化
 	//memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
 }
 
@@ -226,12 +260,12 @@ void Graphics::DrawTriangle(Point4* pArray)
 			Min = (int)pArray[i].value[1];
 		}
 	}
-	if (Max < 0 || Min >= (int)Height)//三角形不在扫描线范围之内，直接忽略
+	if (Max < 0 || Min >= (int)viewPortHeight)//三角形不在扫描线范围之内，直接忽略
 	{
 		return;
 	}
 	Min = max(0, Min);//记录扫描线最小值
-	Max = min(Max, (int)Height);//记录扫描线最大值
+	Max = min(Max, (int)viewPortHeight);//记录扫描线最大值
 	std::list<EdgeTableItem> AET;//活性边表
 	std::list<EdgeTableItem>* NET = new std::list<EdgeTableItem>[Max - Min + 1];//新边表 如果min=1 ,max=2 则需要 max-min+1=2-1+1行扫描线
 	for (unsigned int i = 0; i < Count; i++)//对每个顶点进行扫描并添加到NET中
@@ -240,7 +274,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线下面，一条(pArray[i+1])在扫描线上面,记录i-1
 		if (pArray[(i + Count - 1) % Count].value[1] > pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] < pArray[(i + Count) % Count].value[1])
 		{
-			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
 			{
 				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
@@ -265,7 +299,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线上面，一条(pArray[i+1])在扫描线下面,记录i+1
 		else if (pArray[(i + Count - 1) % Count].value[1] < pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] > pArray[(i + Count) % Count].value[1])
 		{
-			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
 			{
 				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
@@ -300,7 +334,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])在扫描线下面，一条(pArray[i+1])和扫描线重合，记录i-1
 		else if (pArray[(i + Count - 1) % Count].value[1] > pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] == pArray[(i + Count) % Count].value[1])
 		{
-			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
 			{
 				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
@@ -325,7 +359,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 		//共享顶点pArray[(i+Count)%Count]的两条边一条(pArray[i-1])和扫描线重合，一条(pArray[i+1])在扫描线下面,记录i+1
 		else if (pArray[(i + Count - 1) % Count].value[1] == pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] > pArray[(i + Count) % Count].value[1])
 		{
-			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
 			{
 				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
@@ -355,7 +389,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 		//共享顶点pArray[(i+Count)%Count]的两条边都在扫描线下方, 记录i-1和i+1
 		else if (pArray[(i + Count - 1) % Count].value[1] > pArray[(i + Count) % Count].value[1] && pArray[(i + Count + 1) % Count].value[1] > pArray[(i + Count) % Count].value[1])
 		{
-			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
 			{
 				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
@@ -377,7 +411,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 				}
 			}
 
-			if (pArray[(i + Count) % Count].value[1] < Height) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
+			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
 			{
 				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
@@ -411,7 +445,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 	}
 	double* interpolationAbo = new double[NumOfVertexABO];//插值之后的ABO
 	double* interpolationVarying = new double[CountOfVarying];//插值之后的varying
-	for (int scanLine = Min; scanLine < min(Max, (int)Height); scanLine++)//开始绘制
+	for (int scanLine = Min; scanLine < Max; scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
 #ifdef _EdgeNotCross
@@ -444,41 +478,37 @@ void Graphics::DrawTriangle(Point4* pArray)
 				else
 				{
 					e = it;
-					if (scanLine >= 0 && scanLine < (int)Height)//只绘制出现在屏幕范围之内的像素
+					for (unsigned int x = max((int)s->x, 0); x < min(e->x, viewPortWidth); x++)
 					{
-						for (unsigned int x = max((int)s->x, 0); x < min(e->x, Width); x++)
+						double Weight[3] = { 0,0,0 };
+						Interpolation(pArray, x, scanLine, Weight);//使用重心坐标插值计算出三个顶点对(j,i)的权重
+						double depth = Weight[0] * pArray[0].value[2] + Weight[1] * pArray[1].value[2] + Weight[2] * pArray[2].value[2];//计算深度值，这个值虽然不是线性的，但是经过线性插值仍然能保证大的更大，小的更小
+						if (depth < -1.0 || depth>1.0)//如果深度超出[-1,1]区间则放弃当前像素
 						{
-							if (x >= 0 && x < Width)
-							{
-								double Weight[3] = { 0,0,0 };
-								Interpolation(pArray, x, scanLine, Weight);//使用重心坐标插值计算出三个顶点对(j,i)的权重
-								double depth = Weight[0] * pArray[0].value[2] + Weight[1] * pArray[1].value[2] + Weight[2] * pArray[2].value[2];//计算深度值，这个值虽然不是线性的，但是经过线性插值仍然能保证大的更大，小的更小
-								if (depth < -1.0 || depth>1.0)//如果深度超出[-1,1]区间则放弃当前像素
-								{
-									continue;
-								}
-								/*
-								 普通线性插值计算出(j,i)的值:v=Weight[0]*v1+Weight[1]*v2+Weight[2]*v3
-								 深度值Depth:D(j,i)=1/z=Weight[0]*(1/z1)+Weight[1]*(1/z2)+Weight[2]*(1/z3)
-								 根据透视校正的原理(j,i)的值:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
-								*/
-								double originDepth = 1 / (Weight[0] * (1 / pArray[0].value[3]) + Weight[1] * (1 / pArray[1].value[3]) + Weight[2] * (1 / pArray[2].value[3]));//这个值是原始深度
-								for (int index = 0; index < NumOfVertexABO; index++)//对每个abo插值
-								{
-									interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + NumOfVertexABO] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + NumOfVertexABO * 2] / pArray[2].value[3] * Weight[2]);
-								}
-								for (int index = 0; index < CountOfVarying; index++)//对每个Varying插值
-								{
-									interpolationVarying[index] = originDepth * (Varying[index] / pArray[0].value[3] * Weight[0] + Varying[index + CountOfVarying] / pArray[1].value[3] * Weight[1] + Varying[index + CountOfVarying * 2] / pArray[2].value[3] * Weight[2]);
-								}
-								if (DepthBuffer[scanLine * Width + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
-								{
-									COLORREF c;
-									FragmentShader(interpolationAbo, interpolationVarying, c);//调用片元着色器
-									fast_putpixel(x, scanLine, c);//先用屏幕空间重心插值求出纹理(暂时不加透视校正) i 扫描线序号，j横坐标序号
-									DepthBuffer[scanLine * Width + x] = depth;//更新深度信息
-								}
-							}
+							continue;
+						}
+						/*
+						 普通线性插值计算出(j,i)的值:v=Weight[0]*v1+Weight[1]*v2+Weight[2]*v3
+						 深度值Depth:D(j,i)=1/z=Weight[0]*(1/z1)+Weight[1]*(1/z2)+Weight[2]*(1/z3)
+						 根据透视校正的原理(j,i)的值:v/z=Weight[0]*(v1/z1)+Weight[1]*(v2/z2)+Weight[2]*(v3/z3)
+						*/
+						double originDepth = 1 / (Weight[0] * (1 / pArray[0].value[3]) + Weight[1] * (1 / pArray[1].value[3]) + Weight[2] * (1 / pArray[2].value[3]));//这个值是原始深度
+						for (int index = 0; index < NumOfVertexABO; index++)//对每个abo插值
+						{
+							interpolationAbo[index] = originDepth * (TransmitAbo[index] / pArray[0].value[3] * Weight[0] + TransmitAbo[index + NumOfVertexABO] / pArray[1].value[3] * Weight[1] + TransmitAbo[index + NumOfVertexABO * 2] / pArray[2].value[3] * Weight[2]);
+						}
+						for (int index = 0; index < CountOfVarying; index++)//对每个Varying插值
+						{
+							interpolationVarying[index] = originDepth * (Varying[index] / pArray[0].value[3] * Weight[0] + Varying[index + CountOfVarying] / pArray[1].value[3] * Weight[1] + Varying[index + CountOfVarying * 2] / pArray[2].value[3] * Weight[2]);
+						}
+						if (DepthBuffer[scanLine * viewPortWidth + x] > depth)//因为在perspective Matrix中取反，所以应该是值越小则近
+						{
+							COLORREF c;
+							FragmentShader(interpolationAbo, interpolationVarying, c);//调用片元着色器
+
+							//因为(x,scanline)是视口坐标，所以需要加上一个(viewPortX,viewPortY)的偏移
+							fast_putpixel(x + viewPortX, scanLine + (ScreenHeight - viewPortY-viewPortHeight), c);//填充颜色
+							DepthBuffer[scanLine * viewPortWidth + x] = depth;//更新深度信息
 						}
 					}
 

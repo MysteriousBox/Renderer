@@ -17,11 +17,14 @@ ddy和ddy是指在屏幕空间上求vbo的偏导数
 返回bool的函数表示有成功或者失败的问题，如果执行失败，可以通过errmsg读取，任何返回bool的函数在进入的时候都会清空errmsg，所以一旦出现问题，请立马读取errmsg
 
 坐标系是上面为Y正方向,右面为X正方向,屏幕向外为Z正方向
+
+视口空间和屏幕空间的宽高单位一样，仅仅是增加了一个x,y的偏移
 */
 class Graphics
 {
 	/*坐标系是上面为Y正方向，右面为X正方向，屏幕向外为Z正方向*/
 public:
+	bool setViewPort(int x,int y,int w,int h);//设置视口坐标和宽高，即在屏幕内部的一个子区域绘制
 	char errmsg[1024] = { '0' };//错误信息，如果执行出错则可以读取本信息
 	void (*VertexShader)(double const vbo[3], double* abo, double* varying, Point4& Position);//顶点着色器，概念和OpenGL类似，但是参数有区别，下面是ABO的说明
 	/*
@@ -40,7 +43,7 @@ public:
 	*/
 	bool enable_CW = true;//是否启用顺时针逆时针三角形剔除
 	bool CW_CCW = false;//默认逆时针,true为顺时针
-	Graphics(int w, int h);
+	Graphics(unsigned int w, unsigned int h);
 	void setVBO(double* buffer, int count);
 	void setABO(double* buffer, int numOfvertex, int count);
 	void Interpolation(Point4 parry[3], double x, double y, double Weight[3]);//使用屏幕坐标插值计算三角形各个顶点的权重并保存在Weight中
@@ -56,8 +59,9 @@ public:
 	void SwapEnd();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
 	void setVaryingCount(int count);//设置Varying变量的数量，如果有使用Varying，则一定要调用本函数
 	COLORREF texture2D(double x, double y);//读取纹理中的颜色
-	unsigned int Width, Height;//绘图设备宽高
 private:
+	unsigned int ScreenWidth = 0, ScreenHeight = 0;
+	unsigned viewPortX = 0, viewPortY = 0, viewPortWidth = 0, viewPortHeight = 0;//视口起始坐标和宽高，从左下角开始
 	int bmpHeight = 0;
 	int bmpwidth = 0;//位图宽高
 	unsigned char* bmpData = NULL;//位图数据区

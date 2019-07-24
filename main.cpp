@@ -129,7 +129,11 @@ void fs(double* ABO, double* varying, COLORREF& FragColor)//片元着色器
 int main()
 {
 	char msg[256];//往调试器打印信息用的缓冲区
-	gp = new Graphics(320, 240);//创建一个画布
+	int width = 640, height = 480;
+	gp = new Graphics(width, height);//创建一个画布
+	int vw = width / 2;
+	int vh = height / 2;
+	//gp->setViewPort(vw, vh, vw, vh);//设置视口，和opengl概念一致
 	gp->enable_CW = true;//启用顺时针逆时针三角形剔除
 	gp->CW_CCW = false;//绘制逆时针三角形
 	gp->VertexShader = vs;//设置顶点着色器程序
@@ -174,9 +178,9 @@ int main()
 	double l, r, b, t, n, f;
 	double w = 5; //近平面的参照宽高
 	double proportion;//宽高比
-	if (gp->Width < gp->Height)
+	if (vw < vh)
 	{ //宽度略小,以宽度为标准
-		proportion = gp->Height / gp->Width;
+		proportion = vh / vw;
 		l = -w / 2;
 		r = w / 2;
 		b = -w * proportion / 2;
@@ -186,7 +190,7 @@ int main()
 	}
 	else
 	{
-		proportion = gp->Width / gp->Height;
+		proportion = vw / vh;
 		l = -w * proportion / 2;
 		r = w * proportion / 2;
 		b = -w / 2;
