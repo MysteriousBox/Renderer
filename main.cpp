@@ -139,7 +139,7 @@ int main()
 	gp->CW_CCW = false;//绘制逆时针三角形
 	gp->VertexShader = vs;//设置顶点着色器程序
 	gp->FragmentShader = fs;//设置片元着色器程序
-	gp->setVaryingCount(1);//需要从顶点着色器传递2个参数到片元着色器
+	//gp->setVaryingCount(1);//需要从顶点着色器传递1个参数到片元着色器
 
 	Vector3 eyePosition(0, 0, 8); //相机原点
 	if (!loadOBJ("mod/Tea.obj", gp))//从文件加载模型
