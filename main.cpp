@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <math.h>
+#include <chrono> 
 #pragma warning(disable:4996)
 //从obj文件读取顶点数据和纹理坐标，暂时不考虑法线
 bool loadOBJ(const char* filename, Graphics* gps)
@@ -202,10 +203,12 @@ int main()
 	Vector3 axis(0, 1, 0);//旋转轴
 	Matrix4 vpMatrix;
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
-	int totalTime=0, totalFrame=0;
+
+	double totalTime = 0;
+	int totalFrame = 0;
 	for (;; totalFrame++)
 	{
-		clock_t oldclock = clock();
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 		Matrix4 mMatrix = Matrix4::Rotate(axis, totalFrame);
 		invModMatrix = Matrix4::QuickInverse(mMatrix);//求出模型矩阵的逆矩阵
 
@@ -225,15 +228,16 @@ int main()
 		gp->Draw();//绘制
 		gp->flush();//等待同步
 		gp->SwapEnd();//绘制到屏幕
-		clock_t now = clock();
-		if (16 - (now - oldclock) > 0)//如果绘制小于16毫秒，则休眠一段时间补齐16毫秒
+		std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+		std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		double useTime = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;//花费时间
+		if (16 - useTime*1000 > 0)//如果绘制小于16毫秒，则休眠一段时间补齐16毫秒
 		{
-			Sleep(16 - (now - oldclock));
+			Sleep(16 - (int)(useTime*1000));
 		}
-		totalTime += now - oldclock;
-		sprintf(msg, "第%d帧:本帧绘制耗时:%ld 毫秒,平均耗时:%lf\n", totalFrame, now - oldclock,(double)totalTime/(double)totalFrame);
+		totalTime += useTime;
+		sprintf(msg, "第%d帧:本帧绘制耗时:%lf 毫秒,平均耗时:%lf毫秒\n", totalFrame, useTime*1000,(double)totalTime/(double)totalFrame*1000);
 		OutputDebugString(msg);//往调试器输出两帧绘制时间间隔
-		oldclock = now;
 	}
 	delete gp;
 	return 0;
