@@ -11,7 +11,9 @@
 //宏_EdgeNotCross 定义了多边形的任意两条边不会交叉，这样就不用在每条扫描线中对其边表排序，当然如果允许两条边交叉的话取消这个宏定义的话就可以
 //因为我知道三角形肯定不会相交，而且我绘制的都是三角形，所以才定义了这个宏，如果使用本函数绘制其他多边形，比如五边形，六边形等，如果运行两条边相交，则应当取消_EdgeNotCross宏，即 #undef _EdgeNotCross
 //开启这个宏在debug模式下能提升10%的帧数
-#define _EdgeNotCross
+//当然这个效率的提升也不是觉得的，因为最开始设计DrawTriangle这个函数的时候我是设计成通用的可以绘制任意多边形的函数，所以没有针对三角形优化
+//这导致了在某些特定情况下会牺牲很大的效率，目前最直观的就是大量的小三角形会导致定义了_EdgeNotCross之后在Debug模式下反而效率会下降，但是在Release下测试好像都有提升，这就是我代码水平不高的体现
+//#define _EdgeNotCross
 
 
 
@@ -400,39 +402,20 @@ void Graphics::DrawTriangle(Point4* pArray)
 			{
 				if (pArray[(i + Count - 1) % Count].value[1] > 0)//这条线可能需要绘制
 				{
-					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
+					double dx1 = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
+					double dx2 = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
-						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx1 * (0 - pArray[(i + Count) % Count].value[1]), dx1, pArray[(i + Count - 1) % Count].value[1]));//记录i-1
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx2 * (0 - pArray[(i + Count) % Count].value[1]), dx2, pArray[(i + Count + 1) % Count].value[1]));//记录i+1
 #ifdef _EdgeNotCross
 						NET[Min].sort(SortEdgeTableItem);
 #endif // _EdgeNotCross
 					}
 					else
 					{
-						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
-#ifdef _EdgeNotCross
-						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
-#endif // _EdgeNotCross
-					}
-				}
-			}
-
-			if (pArray[(i + Count) % Count].value[1] < viewPortHeight) //当前顶点Y值必须小于Height，否则由它联系的边另一端必然更大，则本条边可以不计
-			{
-				if (pArray[(i + Count + 1) % Count].value[1] > 0)//这条线可能需要绘制
-				{
-					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
-					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
-					{
-						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
-#ifdef _EdgeNotCross
-						NET[Min].sort(SortEdgeTableItem);
-#endif // _EdgeNotCross
-					}
-					else
-					{
-						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx1, pArray[(i + Count - 1) % Count].value[1]));//记录i-1
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx2, pArray[(i + Count + 1) % Count].value[1]));//记录i+1
 #ifdef _EdgeNotCross
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
 #endif // _EdgeNotCross

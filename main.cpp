@@ -205,7 +205,7 @@ int main()
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
 
 	double totalTime = 0;
-	int totalFrame = 0;
+	int totalFrame = 1;
 	for (;; totalFrame++)
 	{
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
