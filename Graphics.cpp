@@ -10,6 +10,7 @@
 
 //宏_EdgeNotCross 定义了多边形的任意两条边不会交叉，这样就不用在每条扫描线中对其边表排序，当然如果允许两条边交叉的话取消这个宏定义的话就可以
 //因为我知道三角形肯定不会相交，而且我绘制的都是三角形，所以才定义了这个宏，如果使用本函数绘制其他多边形，比如五边形，六边形等，如果运行两条边相交，则应当取消_EdgeNotCross宏，即 #undef _EdgeNotCross
+//开启这个宏在debug模式下能提升10%的帧数
 #define _EdgeNotCross
 
 
@@ -264,10 +265,12 @@ void Graphics::DrawTriangle(Point4* pArray)
 			Min = (int)pArray[i].value[1];
 		}
 	}
+	
 	if (Max < 0 || Min >= (int)viewPortHeight)//三角形不在扫描线范围之内，直接忽略
 	{
 		return;
 	}
+
 	Min = max(0, Min);//记录扫描线最小值
 	Max = min(Max, (int)viewPortHeight);//记录扫描线最大值
 	std::list<EdgeTableItem> AET;//活性边表

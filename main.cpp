@@ -202,12 +202,11 @@ int main()
 	Vector3 axis(0, 1, 0);//旋转轴
 	Matrix4 vpMatrix;
 	Matrix::Mult(pMatrix.Value[0], vMatrix.Value[0], 4, 4, 4, vpMatrix.Value[0]);
-
-	for (int i = 0;; i++)
+	int totalTime=0, totalFrame=0;
+	for (;; totalFrame++)
 	{
-		i = i % 360;
 		clock_t oldclock = clock();
-		Matrix4 mMatrix = Matrix4::Rotate(axis, i);
+		Matrix4 mMatrix = Matrix4::Rotate(axis, totalFrame);
 		invModMatrix = Matrix4::QuickInverse(mMatrix);//求出模型矩阵的逆矩阵
 
 		Vector3 lightvec(0.5, 0.5, 0.5);//光线向量
@@ -231,7 +230,8 @@ int main()
 		{
 			Sleep(16 - (now - oldclock));
 		}
-		sprintf(msg, "第%d帧:本帧绘制耗时:%ld 毫秒\n", i, now - oldclock);
+		totalTime += now - oldclock;
+		sprintf(msg, "第%d帧:本帧绘制耗时:%ld 毫秒,平均耗时:%lf\n", totalFrame, now - oldclock,(double)totalTime/(double)totalFrame);
 		OutputDebugString(msg);//往调试器输出两帧绘制时间间隔
 		oldclock = now;
 	}
