@@ -6,6 +6,9 @@
 #include <io.h>
 #include <algorithm>
 #pragma warning(disable:4996)
+//定义了多边形的任意两条边不会交叉，这样就不用在每条扫描线中对其边表排序，当然如果允许两条边交叉的话取消这个宏定义的话就可以
+	//因为我知道三角形肯定不会相交，而且我绘制的都是三角形，所以才定义了这个宏，如果使用本函数绘制其他多边形，比如五边形，六边形等，如果运行两条边相交，则应当取消_EdgeNotCross宏，即 #undef _EdgeNotCross
+#define _EdgeNotCross
 
 Graphics::Graphics(int w, int h) :Width(w), Height(h)
 {
@@ -194,7 +197,18 @@ COLORREF Graphics::texture2D(double x, double y)
 		return RGB(255, 255, 255);
 	}
 }
-
+//边表排序程序
+bool SortEdgeTableItem(EdgeTableItem const& E1, EdgeTableItem const& E2)//将边表排序，按X增序排序，如果X一样，则按照dx增序排序
+{
+	if (E1.x != E2.x)
+	{
+		return E1.x < E2.x;
+	}
+	else
+	{
+		return E1.dx < E2.dx;
+	}
+}
 //本函数中插值计算都是采用double
 void Graphics::DrawTriangle(Point4* pArray)
 {
@@ -234,10 +248,16 @@ void Graphics::DrawTriangle(Point4* pArray)
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
 						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[Min].sort(SortEdgeTableItem);//将边表排序，按X增序排序，如果X一样，则按照dx增序排序
+#endif // _EdgeNotCross
 					}
 					else
 					{
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 				}
 			}
@@ -252,11 +272,17 @@ void Graphics::DrawTriangle(Point4* pArray)
 					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
-						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 					else
 					{
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 				}
 			}
@@ -281,11 +307,17 @@ void Graphics::DrawTriangle(Point4* pArray)
 					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
-						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 					else
 					{
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 				}
 			}
@@ -300,11 +332,17 @@ void Graphics::DrawTriangle(Point4* pArray)
 					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
-						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 					else
 					{
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 				}
 			}
@@ -324,11 +362,17 @@ void Graphics::DrawTriangle(Point4* pArray)
 					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count - 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count - 1) % Count].value[1]);
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
-						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count - 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 					else
 					{
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count - 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 				}
 			}
@@ -340,11 +384,17 @@ void Graphics::DrawTriangle(Point4* pArray)
 					double dx = (pArray[(i + Count) % Count].value[0] - pArray[(i + Count + 1) % Count].value[0]) / (pArray[(i + Count) % Count].value[1] - pArray[(i + Count + 1) % Count].value[1]);
 					if (pArray[(i + Count) % Count].value[1] < 0)//从0扫描线开始记录，忽略掉小于0的那些扫描线
 					{
-						NET[0].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+						NET[Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0] + dx * (0 - pArray[(i + Count) % Count].value[1]), dx, pArray[(i + Count + 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 					else
 					{
 						NET[(int)pArray[(i + Count) % Count].value[1] - Min].push_back(EdgeTableItem(pArray[(i + Count) % Count].value[0], dx, pArray[(i + Count + 1) % Count].value[1]));
+#ifdef _EdgeNotCross
+						NET[(int)pArray[(i + Count) % Count].value[1] - Min].sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 					}
 				}
 			}
@@ -364,8 +414,18 @@ void Graphics::DrawTriangle(Point4* pArray)
 	for (int scanLine = Min; scanLine < min(Max, (int)Height); scanLine++)//开始绘制
 	{
 		std::list<EdgeTableItem>::iterator it_end = AET.end();
-		AET.splice(it_end, NET[scanLine - Min]);
-		AET.sort([](EdgeTableItem const& E1, EdgeTableItem const& E2) {return E1.x < E2.x; });//将活性边表排序，按X增序排序
+#ifdef _EdgeNotCross
+		//如果边不会交叉，则每当有新的边被添加进来的时候才排序
+		if (!NET[scanLine - Min].empty())
+		{
+			AET.splice(it_end, NET[scanLine - Min]);//在当前扫描线添加新边
+			AET.sort(SortEdgeTableItem);
+		}
+#else
+		//如果允许边交叉，则每条扫描线都需要排序一次才能正确的填充本扫描线
+		AET.splice(it_end, NET[scanLine - Min]);//在当前扫描线添加新边
+		AET.sort(SortEdgeTableItem);
+#endif // _EdgeNotCross
 		std::list<EdgeTableItem>::iterator s, e;
 		int CountPosite = 0;
 		for (std::list<EdgeTableItem>::iterator it = AET.begin(); it != AET.end();)
