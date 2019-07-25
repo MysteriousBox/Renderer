@@ -7,9 +7,9 @@
 软件直接运行可以得到如下的效果：
 
 Tea.obj
-![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Shader/master/mod/Tea.gif)  
+![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Renderer/master/mod/Tea.gif)  
 woman.obj
-![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Shader/master/mod/woman.gif)  
+![运行效果](https://raw.githubusercontent.com/yangzhenzhuozz/Renderer/master/mod/woman.gif)  
 
 ---
 >主要实现的功能:
