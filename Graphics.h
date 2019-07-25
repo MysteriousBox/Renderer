@@ -1,6 +1,7 @@
 ﻿#ifndef _GRAPHICSM
 #define _GRAPHICSM
 #include <graphics.h>      // 引用图形库头文件
+#include <list>
 #include "Point2.h"
 #include "Point4.h"
 #include "EdgeTableItem.h"
@@ -78,5 +79,8 @@ private:
 	int aboCount = 0;//abo数量
 	double* Varying = NULL;//当前的Varying变量，经过插值之后会传递给片元着色器
 	int CountOfVarying = 0;//Varying变量数量
+	std::list<EdgeTableItem>* NET = NULL;//新边表和ViewPortHeight大小一样
+	double* interpolationAbo = NULL;//当前线程在绘制当前顶点插值之后的ABO，因为单线程，所以这里只需要一个就行了
+	double* interpolationVarying = NULL;//当前线程在绘制当前顶点插值之后的varying，因为单线程，所以这里只需要一个就行了
 };
 #endif // !_GRAPHICSM
