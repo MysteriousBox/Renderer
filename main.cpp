@@ -141,7 +141,7 @@ int main()
 	gp->FragmentShader = fs;//设置片元着色器程序
 	//gp->setVaryingCount(1);//需要从顶点着色器传递1个参数到片元着色器
 
-	Vector3 eyePosition(0, 0, 8); //相机原点
+	Vector3 eyePosition(0, 0, 6); //相机原点
 	if (!loadOBJ("mod/woman.obj", gp))//从文件加载模型
 	{
 		sprintf(msg, "加载obj文件失败\n");
