@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include <io.h>
 #include <algorithm>
+#include <intrin.h> 
 #pragma warning(disable:4996)
-
-
 bool Graphics::setViewPort(int x, int y, int w, int h)
 {
 	if (x < 0 || y < 0)
@@ -436,6 +435,7 @@ void Graphics::DrawTriangle(Point4* pArray)
 					for (unsigned int x = max((int)s->x, 0); x < min(e->x, viewPortWidth); x++)
 					{
 						double Weight[3] = { 0,0,0 };
+						double Weight1[3] = { 0,0,0 };
 						Interpolation(pArray, x, scanLine, Weight);//使用重心坐标插值计算出三个顶点对(j,i)的权重
 						double depth = Weight[0] * pArray[0].value[2] + Weight[1] * pArray[1].value[2] + Weight[2] * pArray[2].value[2];//计算深度值，这个值虽然不是线性的，但是经过线性插值仍然能保证大的更大，小的更小
 						if (depth < -1.0 || depth>1.0)//如果深度超出[-1,1]区间则放弃当前像素
@@ -516,6 +516,27 @@ W1=S1/S,W2=S2/S,W3=S3/S
 下面这个是我自己推算的，不知道是不是正确的:
 如果P P1 P2这个三角形和三角形P0,P1,P2有相交部分，面积取正，否则取负
 */
+//使用sse加速,一次插值4个点
+#define _INTERPOLATRIONBYSQUARE //使用面积插值，没定义本宏的话使用直线求交点的方式插值，对比一下速度，用面积插值可用SSE优化
+#ifdef _INTERPOLATRIONBYSQUARE
+void Graphics::Interpolation(Point4 ps[3], double x, double y, double Weight[3])
+{
+	//使用有向面积
+	Vector3 a(ps[1].value[0] - ps[0].value[0], ps[1].value[1] - ps[0].value[1], 0.0);//p0 p1
+	Vector3 b(ps[2].value[0] - ps[1].value[0], ps[2].value[1] - ps[1].value[1], 0.0);//p1 p2
+	Vector3 c(ps[0].value[0] - ps[2].value[0], ps[0].value[1] - ps[2].value[1], 0.0);//p2 p0
+	Vector3 a1(x - ps[1].value[0], y - ps[1].value[1], 0.0);//p1 (x,y)
+	Vector3 b1(x - ps[2].value[0], y - ps[2].value[1], 0.0);//p2 (x,y)
+	Vector3 c1(x - ps[0].value[0], y - ps[0].value[1], 0.0);//p0 (x,y)
+	Vector3 v = Vector3::CrossProduct(a, b);//得到三个点围城的三角形面积*2
+	Vector3 v2 = Vector3::CrossProduct(a, a1);//顶点p2对面面积*2
+	Vector3 v0 = Vector3::CrossProduct(b, b1);//顶点p0对面面积*2
+	Vector3 v1 = Vector3::CrossProduct(c, c1);//顶点p1对面面积*2
+	Weight[0] = v0.value[2] / v.value[2];
+	Weight[1] = v1.value[2] / v.value[2];
+	Weight[2] = v2.value[2] / v.value[2];
+}
+#else
 void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight[3])
 {
 	/*
@@ -615,6 +636,7 @@ void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight
 	default:break;
 	}
 }
+#endif // _INTERPOLATRIONBYSQUARE
 
 
 

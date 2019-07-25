@@ -48,6 +48,7 @@ public:
 	void setVBO(double* buffer, int count);
 	void setABO(double* buffer, int numOfvertex, int count);
 	void Interpolation(Point4 parry[3], double x, double y, double Weight[3]);//使用屏幕坐标插值计算三角形各个顶点的权重并保存在Weight中
+	void Interpolation1(Point4 parry[3], double x, double y, double Weight[3]);//使用屏幕坐标插值计算三角形各个顶点的权重并保存在Weight中
 	~Graphics();
 	void fast_putpixel(int x, int y, COLORREF c);
 	COLORREF fast_getpixel(int x, int y);
