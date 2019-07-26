@@ -49,6 +49,7 @@ Graphics::Graphics(unsigned int w,unsigned int h) :ScreenWidth(w), ScreenHeight(
 {
 	setViewPort(0,0,w,h);
 	initgraph(w, h);
+	BeginBatchDraw();
 	setfillcolor(RED);
 	g_pBuf = GetImageBuffer(NULL);
 	FragmentShader = NULL;
@@ -196,14 +197,10 @@ void Graphics::clearDepth(double v)
 	//memset(DepthBuffer, 0x7f, sizeof(double)*Width*Height);//用0x7f作为memset能搞定的极大值，memset应该有优化，比如调用cpu的特殊指令可以在较短的周期内赋值
 }
 
-void Graphics::SwapStart()
-{
-	BeginBatchDraw();
-}
-
-void Graphics::SwapEnd()
+void Graphics::Swap()
 {
 	EndBatchDraw();
+	BeginBatchDraw();
 }
 
 void Graphics::setVaryingCount(int count)
