@@ -57,8 +57,7 @@ public:
 	bool Draw();//返回false表示绘制失败
 	void clear();
 	void clearDepth(double v);//清理深度缓冲区,注意这里是使用memset来填充的，所以假如c=0x01，对应像素的深度值是一个dobule类型8字节,则实际上会被填充成0x0101010101010101
-	void SwapStart();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
-	void SwapEnd();//对于EasyX则是用BeginBatchDraw和EndBatchDraw实现的
+	void Swap();//对于EasyX是用BeginBatchDraw和EndBatchDraw实现的
 	void setVaryingCount(int count);//设置Varying变量的数量，如果有使用Varying，则一定要调用本函数
 	COLORREF texture2D(double x, double y);//读取纹理中的颜色
 private:
