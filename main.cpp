@@ -223,11 +223,10 @@ int main()
 
 		Matrix::Mult(vpMatrix.Value[0], mMatrix.Value[0], 4, 4, 4, mvpMatrix.Value[0]);
 		gp->clearDepth(0.0);//清除深度缓冲区，将深度缓冲区值设置为一个非常小的值
-		gp->SwapStart();
 		gp->clear();//清除屏幕
 		gp->Draw();//绘制
 		gp->flush();//等待同步
-		gp->SwapEnd();//绘制到屏幕
+		gp->Swap();//绘制到屏幕
 		std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 		std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 		double useTime = double(duration.count()) * std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;//花费时间
