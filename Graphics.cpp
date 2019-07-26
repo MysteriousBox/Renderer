@@ -156,10 +156,10 @@ bool Graphics::Draw()
 		*/
 		Vector3 a(parray[0].value[0] - parray[1].value[0], parray[0].value[1] - parray[1].value[1], 0);
 		Vector3 b(parray[0].value[0] - parray[2].value[0], parray[0].value[1] - parray[2].value[1], 0);
-		//a b向量叉乘向量的z>0则表示逆时针，反之顺时针，面积不为0肯定不等于0
-		//叉乘向量的模为0表示面积为0
-		Vector3 t = Vector3::CrossProduct(a, b);
-		if (t.Mod() == 0)
+		
+		//使用有向面积判断顺逆时针和面积是否为0
+		double t = a.value[0]*b.value[1]-a.value[1]*b.value[0];
+		if (t == 0)
 		{
 			continue;
 		}
@@ -167,14 +167,14 @@ bool Graphics::Draw()
 		{
 			if (!CW_CCW)//使用顺时针绘制
 			{
-				if (t.value[2] > 0)//实际确实逆时针
+				if (t > 0)//实际确实逆时针
 				{
 					continue;
 				}
 			}
 			else//同上
 			{
-				if (t.value[2] < 0)
+				if (t < 0)
 				{
 					continue;
 				}
@@ -521,20 +521,23 @@ W1=S1/S,W2=S2/S,W3=S3/S
 #ifdef _INTERPOLATRIONBYSQUARE
 void Graphics::Interpolation(Point4 ps[3], double x, double y, double Weight[3])
 {
-	//使用有向面积
+	//使用有向面积计算重心坐标插值
+	/*
+	向量叉积的模为面积的两倍，叉积为面积方向，当z=0的时候，可简化为面积=|(ax*by-ay*bx)|/2,去掉绝地值符号得到有向面积，为正表示顺时针，为负表示逆时针
+	*/
 	Vector3 a(ps[1].value[0] - ps[0].value[0], ps[1].value[1] - ps[0].value[1], 0.0);//p0 p1
 	Vector3 b(ps[2].value[0] - ps[1].value[0], ps[2].value[1] - ps[1].value[1], 0.0);//p1 p2
 	Vector3 c(ps[0].value[0] - ps[2].value[0], ps[0].value[1] - ps[2].value[1], 0.0);//p2 p0
 	Vector3 a1(x - ps[1].value[0], y - ps[1].value[1], 0.0);//p1 (x,y)
 	Vector3 b1(x - ps[2].value[0], y - ps[2].value[1], 0.0);//p2 (x,y)
 	Vector3 c1(x - ps[0].value[0], y - ps[0].value[1], 0.0);//p0 (x,y)
-	Vector3 v = Vector3::CrossProduct(a, b);//得到三个点围城的三角形面积*2
-	Vector3 v2 = Vector3::CrossProduct(a, a1);//顶点p2对面面积*2
-	Vector3 v0 = Vector3::CrossProduct(b, b1);//顶点p0对面面积*2
-	Vector3 v1 = Vector3::CrossProduct(c, c1);//顶点p1对面面积*2
-	Weight[0] = v0.value[2] / v.value[2];
-	Weight[1] = v1.value[2] / v.value[2];
-	Weight[2] = v2.value[2] / v.value[2];
+	double s = a.value[0] * b.value[1] - a.value[1] * b.value[0];//得到三个点围城的三角形面积*2
+	double s2 = a.value[0] * a1.value[1] - a.value[1] * a1.value[0];//顶点p2对面面积*2
+	double s0 = b.value[0] * b1.value[1] - b.value[1] * b1.value[0];//顶点p0对面面积*2
+	double s1 = c.value[0] * c1.value[1] - c.value[1] * c1.value[0];//顶点p1对面面积*2
+	Weight[0] = s0 / s;
+	Weight[1] = s1 / s;
+	Weight[2] = s2 / s;
 }
 #else
 void Graphics::Interpolation(Point4 pArray[3], double x, double y, double Weight[3])
