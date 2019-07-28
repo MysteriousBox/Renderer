@@ -143,14 +143,14 @@ int main()
 	//gp->setVaryingCount(1);//需要从顶点着色器传递1个参数到片元着色器
 
 	Vector3 eyePosition(0, 0, 9.5); //相机原点
-	if (!loadOBJ("mod/teapot.obj", gp))//从文件加载模型
+	if (!loadOBJ("mod/cube.obj", gp))//从文件加载模型
 	{
 		sprintf(msg, "加载obj文件失败\n");
 		OutputDebugString(gp->errmsg);//往调试器输出错误信息
 		delete gp;
 		return -1;
 	}
-	if (!gp->loadBMP("mod/teapot.bmp"))//加载BMP文件做纹理
+	if (!gp->loadBMP("mod/lena.bmp"))//加载BMP文件做纹理
 	{
 		OutputDebugString(gp->errmsg);//往调试器输出错误信息
 		delete gp;
